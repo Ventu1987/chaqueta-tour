@@ -147,16 +147,21 @@ const FORMATOS = {SINGLES:"Singles",FOURBALL:"Fourball (mejor bola)",FOURSOME:"F
 let S = {ses:null, cat:null, est:null, tab:"vivo", match:null, hoyo:1, err:"", cargando:false};
 
 /* ── llamadas al script ── */
+function sesionVencida(r){
+  if(r && !r.ok && /Sesión vencida/i.test(r.error||"")){ S.ses=null; try{localStorage.removeItem("ct-ses")}catch(e){}
+    S.err="Tu sesión venció, volvé a entrar"; pintar(); return true; }
+  return false;
+}
 async function api(accion, datos={}, metodo="GET"){
   try{
     if(metodo==="GET"){
       const q=new URLSearchParams(Object.assign({accion},datos)).toString();
       const r=await fetch(API+"?"+q,{cache:"no-store"});
-      return await r.json();
+      const j=await r.json(); sesionVencida(j); return j;
     }
     const r=await fetch(API,{method:"POST",body:JSON.stringify(Object.assign({accion},datos)),
       headers:{"Content-Type":"text/plain;charset=utf-8"}});
-    return await r.json();
+    const j=await r.json(); sesionVencida(j); return j;
   }catch(e){ return {ok:false,error:"Sin conexión con el servidor"}; }
 }
 const tok = () => S.ses ? S.ses.token : "";
@@ -243,7 +248,8 @@ function vistaArmar(){
   ${ses.map((s,i)=>`<div class="card"><div class="sec-h" style="margin:0 0 6px"><span class="f">${esc(s.nombre)}</span><span class="pill">${FORMATOS[s.formato]}</span></div>
     ${s.matches.length?`<div class="small muted">${s.matches.length} cruces cargados</div>
       ${s.matches.map(m=>`<div class="mrow" style="cursor:default"><div class="lado"><div class="nm">${m.bags.map(nom).map(esc).join(" / ")}</div></div>
-        <span class="est">${esc(m.hora||"")}</span><div class="lado r"><div class="nm">${m.resto.map(nom).map(esc).join(" / ")}</div></div></div>`).join("")}`
+        <span class="est">${esc(m.hora||"")}</span><div class="lado r"><div class="nm">${m.resto.map(nom).map(esc).join(" / ")}</div>
+        ${m.match_id?`<button class="volver" data-borrar="${m.match_id}" data-s="${i}" style="font-size:12px">borrar</button>`:""}</div></div>`).join("")}`
     :`<div class="small muted">Todavía sin cruces</div>`}
     <button class="btn sec" data-ses="${i}" style="margin-top:10px">Agregar cruce a esta sesión</button></div>`).join("")}
   <div class="card"><h3>Nueva sesión</h3>
@@ -308,21 +314,26 @@ function vistaVivo(){
         <div class="lado r"><div class="nm">${m.resto.map(j=>esc(nom(j))).join("<br>")}<small>${m.jugados?("hoyo "+m.jugados):""}</small></div></div>
       </div>`; }).join("")}</div>`;
   }).join("")}
-  <p class="small muted" style="margin-top:14px">Se actualiza solo cada 20 segundos. Tocá un cruce para ver la tarjeta y cargar golpes.</p>`;
+  <p class="small muted" style="margin-top:14px">Se actualiza solo cada 20 segundos. Tocá un cruce para ver la tarjeta y cargar golpes.</p>
+  ${S.ses.jugador.rol==="admin"&&e.evento.estado==="EN_JUEGO"?`<button class="btn sec" id="cerrarEv" style="margin-top:8px">Cerrar el evento y guardarlo</button>`:""}
+  ${S.ses.jugador.rol==="admin"&&e.evento.estado==="BORRADOR"?`<div class="aviso">Este evento todavía está en borrador: solo lo ves vos. Empezalo desde la pestaña Armar.</div>`:""}`;
 }
 function vistaMatch(){
   const e=S.est, m=e.matches.find(x=>x.match_id===S.match);
   if(!m) { S.match=null; return vistaVivo(); }
   const par=e.cancha.par, st=estadoTxt(m);
-  const jug=m.bags.concat(m.resto);
+  const unaBola=m.una_bola;
+  const jug=unaBola?[m.bags[0],m.resto[0]]:m.bags.concat(m.resto);
+  const nombreLado=j=>unaBola?(String(j)===String(m.bags[0])?m.bags.map(nom).join(" / "):m.resto.map(nom).join(" / ")):nom(j);
   const tar={}; m.tarjeta.forEach(t=>tar[String(t.jugador_id)]=t.golpes);
+  const aviso = unaBola?`<div class="aviso">En ${FORMATOS[m.formato]} la pareja juega una sola bola: se carga un resultado por equipo.</div>`:"";
   const puedo = S.ses.jugador.rol==="admin" || jug.map(String).includes(String(S.ses.jugador.id));
   const tramo=(desde,hasta)=>`<div class="tw"><table><thead>
     <tr><th class="l">Hoyo</th>${[...Array(hasta-desde+1)].map((_,i)=>`<th>${desde+i}</th>`).join("")}<th>${desde===1?"Ida":"Vuelta"}</th></tr>
     <tr><th class="l">Par</th>${[...Array(hasta-desde+1)].map((_,i)=>`<th>${par[desde-1+i]}</th>`).join("")}<th>${par.slice(desde-1,hasta).reduce((a,b)=>a+b,0)}</th></tr></thead><tbody>
     ${jug.map(j=>{ const g=tar[String(j)]||[]; const lado=m.bags.map(String).includes(String(j))?"b":"r";
       const suma=g.slice(desde-1,hasta).filter(x=>x!=null).reduce((a,b)=>a+b,0);
-      return `<tr><td class="l" style="color:var(--${lado==="b"?"bags":"resto"});font-weight:600">${esc(nom(j))}</td>
+      return `<tr><td class="l" style="color:var(--${lado==="b"?"bags":"resto"});font-weight:600">${esc(nombreLado(j))}</td>
       ${[...Array(hasta-desde+1)].map((_,i)=>{ const h=desde-1+i, v=g[h];
         const gano = m.hoyos[h]===(lado==="b"?"A":"B");
         return `<td>${v==null?"·":(gano?`<span class="gb ${lado}">${v}</span>`:v)}</td>`; }).join("")}
@@ -342,7 +353,7 @@ function vistaMatch(){
       <div class="small muted">Hoyo ${hoyoAct} · par ${par[hoyoAct-1]}${(m.golpes_de&&Object.keys(m.golpes_de).length)?"":""}</div>
       ${jug.map(j=>{ const v=(tar[String(j)]||[])[hoyoAct-1];
         const rec=(m.golpes_de||{})[String(j)]||0;
-        return `<div class="cargaj"><div class="nm">${esc(nom(j))}<div class="small muted">recibe ${rec} golpe${rec===1?"":"s"} en la vuelta</div></div>
+        return `<div class="cargaj"><div class="nm">${esc(nombreLado(j))}<div class="small muted">${unaBola?"la pareja recibe":"recibe"} ${rec} golpe${rec===1?"":"s"} en la vuelta</div></div>
           <div class="step"><button data-j="${j}" data-d="-1">−</button><b id="g${j}">${v??par[hoyoAct-1]}</b><button data-j="${j}" data-d="1">+</button>
           <button class="btn" style="width:auto;margin:0;padding:10px 14px" data-guardar="${j}">${v!=null?"Cambiar":"Guardar"}</button></div></div>`; }).join("")}
       <div class="err">${esc(S.err)}</div></div>`;
@@ -352,7 +363,7 @@ function vistaMatch(){
     <div class="res"><b>${st.t}</b><span>${m.cerrado?"final":(m.jugados?"hoyo "+m.jugados:"por salir")}</span></div>
     <div class="lado r"><div class="nm">${m.resto.map(j=>esc(nom(j))).join("<br>")}</div><div class="hc">Resto del Mundo</div></div>
   </div></div>
-  ${tramo(1,9)}${tramo(10,18)}
+  ${aviso}${tramo(1,9)}${tramo(10,18)}
   ${carga}`;
 }
 
@@ -360,7 +371,26 @@ function vistaMatch(){
 function vistaTab(){
   if(S.tab==="vivo") return S.match?vistaMatch():vistaVivo();
   if(S.tab==="armar") return A.cruce?vistaCruce():vistaArmar();
+  if(S.tab==="hcp") return vistaHcp();
   return "";
+}
+/* handicaps del día: arrancan con los de la base y el admin puede corregirlos */
+function vistaHcp(){
+  const e=S.est;
+  if(!e||!e.evento) return `<h1>Handicaps del día</h1><p class="lead">Primero armá el evento.</p>`;
+  const ids=[]; e.matches.forEach(m=>m.bags.concat(m.resto).forEach(j=>{ if(!ids.includes(String(j))) ids.push(String(j)); }));
+  if(!ids.length) return `<h1>Handicaps del día</h1><p class="lead">Todavía no hay cruces armados.</p>`;
+  const aj=e.hcp_ajustado||{};
+  const fila=j=>{ const v=(e.hcp||{})[j]; const tocado=aj[j]!==undefined;
+    return `<div class="cargaj"><div class="nm">${esc(nom(j))}<div class="small ${tocado?"ok":"muted"}">${tocado?"ajustado para este evento":"viene de la base"}</div></div>
+      <div class="step"><button data-h="-1" data-j="${j}">−</button><b id="h${j}">${v}</b><button data-h="1" data-j="${j}">+</button>
+      <button class="btn" style="width:auto;margin:0;padding:10px 14px" data-fijar="${j}">Guardar</button></div></div>`; };
+  const lado=(t,cls)=>`<div class="card"><h3 style="color:var(--${cls})">${t}</h3>
+    ${ids.filter(j=>eqDe(j)===(cls==="bags"?"bag":"resto")).map(fila).join("")}</div>`;
+  return `<h1>Handicaps del día</h1>
+  <p class="lead">Se toman de la base, del último handicap que figura. Si alguno está desactualizado, corregilo acá: vale solo para este evento y recalcula los matches al instante.</p>
+  ${lado("Bags Boys","bags")}${lado("Resto del Mundo","resto")}
+  <div class="err">${esc(S.err)}</div>`;
 }
 function pintar(){
   if(!S.ses){ app().innerHTML=vistaLogin(); ligarLogin(); return; }
@@ -372,6 +402,7 @@ function pintar(){
   <div class="tabs">
     <button data-t="vivo" class="${S.tab==="vivo"?"on":""}"><b>◉</b>En vivo</button>
     ${admin?`<button data-t="armar" class="${S.tab==="armar"?"on":""}"><b>⚑</b>Armar</button>`:""}
+    ${admin?`<button data-t="hcp" class="${S.tab==="hcp"?"on":""}"><b>⚖</b>Handicaps</button>`:""}
     <button data-t="hist"><b>≡</b>Historia</button>
   </div>
   <div class="drawer" id="drawer"><div class="dpanel">
@@ -418,6 +449,28 @@ function ligar(){
     });
   }
   if(S.tab==="armar") ligarArmar();
+  if(S.tab==="hcp"){
+    document.querySelectorAll(".step button[data-h]").forEach(b=>b.onclick=()=>{
+      const el=document.getElementById("h"+b.dataset.j);
+      el.textContent=Math.max(0,Math.min(36,+el.textContent+ +b.dataset.h));
+    });
+    document.querySelectorAll("[data-fijar]").forEach(b=>b.onclick=async()=>{
+      const j=b.dataset.fijar, v=+document.getElementById("h"+j).textContent;
+      b.disabled=true; b.textContent="…";
+      const r=await api("fijarHcp",{token:tok(),evento_id:S.est.evento.evento_id,jugador_id:j,hcp:v},"POST");
+      if(!r.ok){ S.err=r.error; b.disabled=false; pintar(); return; }
+      S.err=""; await refrescar(true);
+    });
+  }
+  const ce=document.getElementById("cerrarEv");
+  if(ce) ce.onclick=async()=>{
+    if(!confirm("¿Cerrar el evento? Queda guardado y deja de aparecer en vivo.")) return;
+    ce.disabled=true; ce.textContent="Cerrando…";
+    const r=await api("cerrarEvento",{token:tok(),evento_id:S.est.evento.evento_id},"POST");
+    if(!r.ok){ S.err=r.error; ce.disabled=false; pintar(); return; }
+    alert("Evento cerrado: "+r.marcador.bags+" a "+r.marcador.resto+" · "+r.ganador);
+    A.evento=null; A.sesiones=[]; await refrescar(true);
+  };
 }
 
 /* ═══ armado: enlaces ═══ */
@@ -438,7 +491,7 @@ function ligarArmar(){
       const r=await api("crearMatch",{token:tok(),sesion_id:s.sesion_id,nro:s.matches.length+1,
         bags_1:A.sel.bags[0]||"",bags_2:A.sel.bags[1]||"",resto_1:A.sel.resto[0]||"",resto_2:A.sel.resto[1]||"",hora},"POST");
       if(!r.ok){ S.err=r.error; g.disabled=false; pintar(); return; }
-      s.matches.push({bags:A.sel.bags.slice(),resto:A.sel.resto.slice(),hora});
+      s.matches.push({match_id:r.match_id,bags:A.sel.bags.slice(),resto:A.sel.resto.slice(),hora});
       A.cruce=false; A.sel={bags:[],resto:[]}; S.err=""; pintar();
     };
     return;
@@ -469,6 +522,12 @@ function ligarArmar(){
     if(!r.ok){ S.err=r.error; a.disabled=false; pintar(); return; }
     A.sesiones.push({sesion_id:r.sesion_id,nombre,formato,matches:[]}); S.err=""; pintar();
   };
+  document.querySelectorAll("[data-borrar]").forEach(b=>b.onclick=async()=>{
+    if(!confirm("¿Borrar este cruce?")) return;
+    const r=await api("borrarMatch",{token:tok(),match_id:b.dataset.borrar},"POST");
+    if(!r.ok){ S.err=r.error; pintar(); return; }
+    const s=A.sesiones[+b.dataset.s]; s.matches=s.matches.filter(x=>x.match_id!==b.dataset.borrar); pintar();
+  });
   document.querySelectorAll("[data-ses]").forEach(b=>b.onclick=()=>{ A.sesionAct=+b.dataset.ses; A.cruce=true; A.sel={bags:[],resto:[]}; pintar(); });
   const act=document.getElementById("activar");
   if(act) act.onclick=async()=>{
