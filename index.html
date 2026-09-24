@@ -368,6 +368,30 @@ th.so i{font-style:normal;font-size:9px;margin-left:3px}
   width:32px;height:32px;border-radius:9px;cursor:pointer;flex:none}
 .thm:hover{background:rgba(255,255,255,.22)}
 
+
+/* acceso a la app en vivo */
+.nav a.live{color:var(--gold);font-weight:700;display:flex;align-items:center;gap:7px}
+.nav a.live i{width:8px;height:8px;border-radius:50%;background:#FF5C6F;display:block;animation:lat 1.6s infinite}
+@keyframes lat{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* medallero */
+td.med{font-family:var(--cond);font-weight:700;font-size:17px}
+td.med.o{color:#D4A017} td.med.p{color:#9AA5B1} td.med.b{color:#B06B3A}
+.cuch{white-space:nowrap;font-weight:700}
+
+/* récords más prolijos: tarjetas parejas y contexto en una línea */
+.grid.g3{align-items:start}
+.grid.g3 .card{display:flex;flex-direction:column;min-height:186px}
+.rows.cmp li{padding:7px 0;gap:9px;align-items:center}
+.rows.cmp .pl{min-width:0;flex:1}
+.rows.cmp .pl .n{min-width:0;overflow:hidden}
+.rows.cmp .pl .n small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%}
+.rows.cmp .r{flex:none;font-family:var(--cond);font-size:20px}
+.rows.fix3{margin-top:2px}
+.rec .rv{flex:none;min-width:64px;text-align:center}
+.rec{align-items:flex-start;gap:14px;padding-top:4px}
+.agc .agd{max-height:none}
+.agl{line-height:1.35}
 footer{max-width:1080px;margin:0 auto;padding:0 16px 40px;color:var(--ink3);font-size:12px}
 </style>
 </head>
@@ -381,6 +405,7 @@ footer{max-width:1080px;margin:0 auto;padding:0 16px 40px;color:var(--ink3);font
     <a href="#/jugador" data-r="jugador">Jugadores</a>
     <a href="#/ryder" data-r="ryder">Ryder Cup</a>
     <a href="#/canchas" data-r="canchas">Canchas</a>
+    <a class="live" href="vivo.html"><i></i>En vivo</a>
   </nav>
 </header>
 <main id="app"><div class="load">Cargando el Tour…</div></main>
@@ -596,11 +621,30 @@ V.inicio = () => {
   <h1>Campeones del Chaqueta Tour</h1>
   <p class="lead">El podio de cada temporada, con los puntos del año y las fechas ganadas.</p>
   <div class="seasons">${C.map(bloque).join("")}</div>
+  ${medallero()}
   ${kpisTour()}
   <h2 class="sec">Récords</h2>
   <p class="lead">Se calculan solos con todas las tarjetas cargadas. Cuentan las ${vueltas().length} vueltas oficiales completas desde ${Math.min(...DB.temporadas)}.</p>
   ${bloqueRecords()}`;
 };
+/* medallero: oro, plata y bronce de todas las temporadas */
+function medallero(){
+  const M={};
+  campeones().forEach(c=>c.top.forEach(x=>{
+    const m=M[x.jid]=M[x.jid]||{o:0,p:0,b:0,años:[]};
+    if(x.pos===1){m.o++;m.años.push(`🥇 ${c.t}`);} else if(x.pos===2){m.p++;m.años.push(`🥈 ${c.t}`);} else {m.b++;m.años.push(`🥉 ${c.t}`);}
+  }));
+  const L=Object.entries(M).map(([j,m])=>({jid:+j,...m,tot:m.o+m.p+m.b}))
+    .sort((a,b)=>b.o-a.o||b.p-a.p||b.b-a.b||nom(a.jid).localeCompare(nom(b.jid)));
+  let pos=0;
+  return `<h2 class="sec">Medallero</h2>
+  <p class="lead">Los podios de las ${DB.temporadas.length} temporadas, sumando segundos y terceros puestos.</p>
+  <div class="lb"><div class="tw"><table><thead><tr><th class="l">#</th><th class="l">Jugador</th><th>🥇</th><th>🥈</th><th>🥉</th><th>Total</th><th class="l">Temporadas</th></tr></thead>
+    <tbody>${L.map((x,i)=>{ if(i===0||L[i-1].o!==x.o||L[i-1].p!==x.p||L[i-1].b!==x.b) pos=i+1;
+      return `<tr class="${pos===1?"lead1":""}"><td class="l ps">${pos}</td><td class="l">${pl(x.jid)}</td>
+      <td class="med o">${x.o||""}</td><td class="med p">${x.p||""}</td><td class="med b">${x.b||""}</td><td class="pts">${x.tot}</td>
+      <td class="l small muted">${x.años.join(" · ")}</td></tr>`; }).join("")}</tbody></table></div></div>`;
+}
 function kpisTour(){
   const V=vueltas(), hoyos=V.length*18;
   const c={ea:0,bi:0,pa:0,bo:0,db:0}; V.forEach(v=>v.g.forEach((g,h)=>c[tipoHoyo(g,v.c.par[h])]++));
@@ -617,7 +661,7 @@ function bloqueRecords(){
     while(i<s.length&&p<=3){ const n=val(s[i]), g=s.filter(x=>val(x)===n);
       g.forEach((x,k)=>out.push(`<li><span class="rk">${k===0?p:""}</span>${pl(x.r.jid,sub(x))}<span class="r">${fv(n)}</span></li>`));
       i+=g.length; p+=g.length; }
-    return `<ul class="rows cmp">${out.join("")}</ul>`;
+    return `<ul class="rows cmp fix3">${out.join("")}</ul>`;
   };
   const nine=[]; V.forEach(v=>{ nine.push({...v,val:v.g.slice(0,9).reduce((a,b)=>a+b,0),lado:"Primeros 9"}); nine.push({...v,val:v.g.slice(9).reduce((a,b)=>a+b,0),lado:"Últimos 9"}); });
   const bir=v=>v.g.filter((g,h)=>g<v.c.par[h]).length, par=v=>v.g.filter((g,h)=>g<=v.c.par[h]).length;
@@ -665,7 +709,7 @@ function bloqueRecords(){
     <div class="card pad"><h3>Más golpes en un hoyo</h3>${uno(hoyos,x=>x.g,-1,v=>v,x=>`Hoyo ${x.h+1} (par ${x.p}) · ${donde(x)}`)}</div>
   </div>
   <div class="grid g2" style="margin-top:12px">
-    ${cardRank("Cucharas de madera",cuenta(DB.res.filter(r=>presente(r)&&r.medal<0).map(r=>r.jid)),v=>"🥄".repeat(Math.min(v,10)),"Se la lleva el que juega y termina restando puntos.")}
+    ${cardRank("Cucharas de madera",cuenta(DB.res.filter(r=>presente(r)&&r.medal<0).map(r=>r.jid)),v=>`<span class="cuch">${v} 🥄</span>`,"Se la lleva el que juega y termina restando puntos.")}
     <div class="card pad"><div class="chead"><h3>Abandonos y WO</h3><span class="cnt2">${abw.length}</span></div>
       <ul class="rows scroll">${abw.map(r=>`<li>${pl(r.jid,ctx(DB.F.get(r.fid)))}<span class="r neg">${fmt(r.medal)}<small>${r.est==="WO"?"WO":"abandono"}</small></span></li>`).join("")}</ul></div>
   </div>`;
@@ -695,7 +739,7 @@ V.temporada = (arg) => {
       <div class="card pad"><div class="chead"><h3>Ganadores de fecha</h3><span class="cnt2">${w.length}</span></div><ul class="rows">
         ${w.map(x=>`<li>${pl(x.r.jid,`Fecha ${x.f.n} · ${esc(canNom(x.f.cid))}`)}<span class="r under">${sgn(x.r.neto-parF(x.f))}<small>${x.r.neto} neto</small></span></li>`).join("")}</ul></div>
       <div class="card pad"><div class="chead"><h3>Cucharas de madera</h3><span class="cnt2">${cuch.reduce((a,x)=>a+x[1],0)}</span></div><ul class="rows">
-        ${rankFilas(cuch,v=>"🥄".repeat(Math.min(v,8)))||`<li class="muted">Nadie terminó restando este año.</li>`}</ul>
+        ${rankFilas(cuch,v=>`<span class="cuch">${v} 🥄</span>`)||`<li class="muted">Nadie terminó restando este año.</li>`}</ul>
         ${t===2024?`<p class="note">En 2024 los últimos puestos no restaban: las únicas cucharas son por abandono o WO.</p>`:""}</div>
     </div>`;
   const COLS=[["jugador","Jugador",x=>nom(x.jid),1],["fechas","Fechas",x=>x.fechas,-1],["bir","Birdie+",x=>(x.c.ea+x.c.bi)/x.hoyos,-1],
@@ -895,7 +939,7 @@ V.jugador = (arg) => {
         <td class="${d.na<d.nb?"win":""}">${d.na}</td><td class="${d.nb<d.na?"win":""}">${d.nb}</td><td class="${d.na<d.nb?"c-bi":d.na>d.nb?"c-10":"muted"}"><b>${d.na===d.nb?"—":sgn(d.na-d.nb)}</b></td></tr>`).join("")}</tbody></table></div>`
       :`<p class="muted" style="margin:0">Nunca coincidieron en una fecha.</p>`}
   </div>
-  ${cuch.length?`<h2>Cucharas de madera</h2><div class="card pad"><ul class="rows">${cuch.map(r=>`<li><div class="small">${ctxLink(F(r))}${r.est!=="JUGO"?` <span class="chip r">${r.est==="WO"?"WO":"abandonó"}</span>`:""}</div><span class="r neg">${fmt(r.medal)}</span></li>`).join("")}</ul></div>`:""}
+  ${cuch.length?`<h2>Cucharas de madera <span class="cuch">${cuch.length} 🥄</span></h2><div class="card pad"><ul class="rows">${cuch.map(r=>`<li><div class="small">${ctxLink(F(r))}${r.est!=="JUGO"?` <span class="chip r">${r.est==="WO"?"WO":"abandonó"}</span>`:""}</div><span class="r neg">${fmt(r.medal)}</span></li>`).join("")}</ul></div>`:""}
   ${abw.length?`<p class="small muted" style="margin:10px 4px 0">${abw.map(r=>`${r.est==="WO"?"WO":"Abandonó"} en ${ctx(F(r))}`).join(". ")}.</p>`:""}`;
 };
 V.jugador.after = (arg) => {
