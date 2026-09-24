@@ -1,0 +1,30 @@
+{
+  "name": "Chaqueta Tour",
+  "short_name": "Chaqueta",
+  "description": "El Chaqueta Tour en tu bolsillo: resultados en vivo, estadísticas e historia.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070F1C",
+  "theme_color": "#050C18",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
