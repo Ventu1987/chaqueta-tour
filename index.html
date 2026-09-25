@@ -1283,7 +1283,27 @@ async function probarURL(u){
     catch(e){ return {ok:false,msg:/accounts\.google\.com|Sign in|Iniciar sesión/i.test(t)
       ? "Pide iniciar sesión: en la implementación, 'Quién tiene acceso' tiene que ser Cualquier usuario."
       : "Responde algo que no es JSON (HTTP "+r.status+"). Suele ser una implementación vieja o un error del script."}; }
-  }catch(e){ return {ok:false,msg:"No contesta: "+e.message+". Revisá que la dirección termine en /exec."}; }
+  }catch(e){
+    const j=await jsonp("pinActivo",{});          /* probamos la vía alternativa antes de dar por muerta la dirección */
+    if(j.ok) return {ok:true,alt:true};
+    return {ok:false,msg:"No contesta por ninguna vía: "+e.message+". Revisá que la dirección termine en /exec y esté publicada."};
+  }
+}
+/* camino alternativo: trae la respuesta con una etiqueta <script>, que ningún navegador bloquea */
+let _cbN=0;
+function jsonp(accion,datos={},ms=20000){
+  return new Promise(res=>{
+    const cb="ctcb"+(++_cbN)+"_"+Date.now();
+    const q=new URLSearchParams(Object.assign({accion,callback:cb},datos)).toString();
+    const s=document.createElement("script");
+    let listo=false;
+    const limpiar=()=>{ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); };
+    window[cb]=j=>{ listo=true; limpiar(); res(j); };
+    s.onerror=()=>{ if(!listo){ limpiar(); res({ok:false,error:"Sin conexión con el servidor",_via:"jsonp"}); } };
+    setTimeout(()=>{ if(!listo){ limpiar(); res({ok:false,error:"El servidor tardó demasiado",_via:"jsonp"}); } },ms);
+    s.src=apiURL()+"?"+q;
+    document.head.appendChild(s);
+  });
 }
 async function api(accion, datos={}, metodo="GET"){
   let r=null, txt="";
@@ -1297,14 +1317,18 @@ async function api(accion, datos={}, metodo="GET"){
     }
     txt=await r.text();
   }catch(e){
-    S.diag=`No se pudo contactar al servidor (${e.message}). Suele ser falta de señal o la dirección del script mal publicada.`;
-    return {ok:false,error:"Sin conexión con el servidor"};
+    S.diag=`La llamada directa falló (${e.message}). Probando por la vía alternativa…`;
+    const j=await jsonp(accion,datos);           /* el navegador bloqueó la llamada: vamos por <script> */
+    if(j.ok){ S.via="alternativa"; S.diag=`La llamada directa está bloqueada por el navegador (${e.message}); la app está usando la vía alternativa y funciona.`; }
+    return j;
   }
   try{
     const j=JSON.parse(txt); sesionVencida(j);
     if(!j.ok) S.diag=`El servidor respondió: ${j.error||"error sin detalle"}`;
     return j;
   }catch(e){
+    const alt=await jsonp(accion,datos);         /* respondió HTML: puede ser la redirección de Google */
+    if(alt.ok){ S.via="alternativa"; return alt; }
     /* respondió algo que no es JSON: casi siempre una pantalla de Google (permisos) o un error del script */
     const pista = /accounts\.google\.com|Iniciar sesión|Sign in/i.test(txt) ? "La implementación pide iniciar sesión: en 'Quién tiene acceso' tiene que decir Cualquier usuario."
       : /Se ha producido un error|Error encountered|TypeError|ReferenceError/i.test(txt) ? "El script tiró un error al ejecutarse."
@@ -1356,7 +1380,7 @@ function ligarLogin(){
     const u=document.getElementById("apiurl").value.trim().replace(/\/+$/,"");
     if(!/\/exec$/.test(u)){ S.cfgOk=false; S.cfgMsg="La dirección tiene que terminar en /exec"; pintar(); return; }
     pu.textContent="Probando…"; const r=await probarURL(u);
-    S.cfgOk=r.ok; S.cfgMsg=r.ok?"Conexión correcta, ya quedó guardada":r.msg;
+    S.cfgOk=r.ok; S.cfgMsg=r.ok?("Conexión correcta"+(r.alt?" (por la vía alternativa)":"")+", ya quedó guardada"):r.msg;
     if(r.ok){ fijarURL(u); S.err=""; }
     pintar();
   };
