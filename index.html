@@ -551,6 +551,16 @@ select,input[type=text],input[type=date],input[type=time]{width:100%;background:
 .jchip.ya{opacity:.4}
 h3.bagsc{color:var(--bags)}h3.restoc{color:var(--resto)}
 
+
+/* amistosos */
+.p420{display:grid;gap:8px;padding:14px}
+.p4{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--soft);border-radius:10px;padding:9px 12px}
+.p4 div{display:flex;align-items:center;gap:9px;font-weight:600}
+.p4 span{font-family:var(--cond);font-weight:700;font-size:24px;color:var(--gold)}
+.mrow.am{grid-template-columns:1fr auto;cursor:pointer}
+.av.inv{background:var(--ink3);color:#fff}
+.pend{background:var(--goldbg);color:var(--gold);font-size:12.5px;font-weight:600;padding:8px 14px;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.pend button{background:none;border:1px solid currentColor;color:inherit;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer}
 .load{padding:40px 10px;text-align:center;color:var(--ink3);font-size:13.5px}
 .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--goldbg);color:var(--gold)}
 
@@ -1238,6 +1248,21 @@ const FORMATOS = {SINGLES:"Singles",FOURBALL:"Fourball (mejor bola)",FOURSOME:"F
 let S = {ses:null, cat:null, est:null, tab:"vivo", match:null, hoyo:1, err:"", cargando:false};
 
 /* ── llamadas al script ── */
+/* si no hay señal, el golpe queda guardado en el teléfono y se reintenta solo */
+function pendientes(){ try{ return JSON.parse(localStorage.getItem("ct-pend")||"[]"); }catch(e){ return []; } }
+function guardarPend(l){ try{ localStorage.setItem("ct-pend",JSON.stringify(l)); }catch(e){} }
+function encolar(g){ const l=pendientes(); const i=l.findIndex(x=>x.match_id===g.match_id&&String(x.jugador_id)===String(g.jugador_id)&&x.hoyo===g.hoyo);
+  if(i>=0) l[i]=g; else l.push(g); guardarPend(l); }
+async function enviarPendientes(){
+  let l=pendientes(); if(!l.length) return 0;
+  const quedan=[];
+  for(const g of l){
+    const r=await api("cargarGolpe",Object.assign({token:tok()},g),"POST");
+    if(!r || !r.ok){ if(r && /Sin conexión/.test(r.error||"")) quedan.push(g); }
+  }
+  guardarPend(quedan);
+  return l.length-quedan.length;
+}
 function sesionVencida(r){
   if(r && !r.ok && /Sesión vencida/i.test(r.error||"")){ S.ses=null; try{localStorage.removeItem("ct-ses")}catch(e){}
     S.err="Tu sesión venció, volvé a entrar"; pintar(); return true; }
@@ -1591,10 +1616,240 @@ function aplicarTema(t){
 
 
 
+/* ═════════ AMISTOSOS ═════════ */
+const esInv = j => String(j).slice(0,4)==="INV:";
+const nomAm = j => esInv(j) ? String(j).slice(4) : nom(+j);
+function avAm(j,cls=""){ if(!esInv(j)) return av(+j,cls,true);
+  const n=String(j).slice(4).trim().split(" "); const ini=((n[0]||"?")[0]+(n[1]?n[1][0]:"")).toUpperCase();
+  return `<span class="av ${cls} ini inv">${ini}</span>`; }
+const MODAL={MATCH:"Match 1 vs 1",P420:"4-2-0 (tres jugadores)",FOURBALL:"Fourball 2 vs 2"};
+let AM={hcpInv:{}, lista:null, nueva:false, sel:[], lados:{}, modalidad:"MATCH", cancha:"", hcp_modo:"DIFERENCIA", p_bola:1, p_suma:0, act:null, hoyo:1, canchaNueva:false, par:Array(18).fill(4), idx:Array(18).fill("")};
+
+async function traerAmistosos(){
+  const r=await api("misAmistosos",{jugador_id:S.ses.jugador.id});
+  AM.lista = (r&&r.ok) ? r.partidas : [];
+  pintar();
+}
+async function traerAmistoso(pid){
+  const r=await api("amistoso",{partida_id:pid});
+  AM.act = (r&&r.ok) ? r.partida : null;
+  pintar();
+}
+function vistaAmistosos(){
+  if(AM.nueva) return vistaNuevoAm();
+  if(AM.act) return vistaAmistoso();
+  if(AM.lista===null) return `<div class="load">Buscando tus partidas…</div>`;
+  const abiertas=AM.lista.filter(p=>p.estado!=="CERRADA"), listas=AM.lista.filter(p=>p.estado==="CERRADA");
+  const fila=p=>{
+    const nombres=p.jugadores.map(j=>nomAm(j.id));
+    const txt = p.modalidad==="FOURBALL"
+      ? p.jugadores.filter(j=>j.lado==="A").map(j=>esc(nomAm(j.id))).join(" / ")+" vs "+p.jugadores.filter(j=>j.lado==="B").map(j=>esc(nomAm(j.id))).join(" / ")
+      : nombres.map(esc).join(" · ");
+    return `<div class="mrow am" data-p="${p.partida_id}">
+      <div class="lado"><div class="nm">${txt}<small>${MODAL[p.modalidad]} · ${esc(p.cancha.nombre||"")}${p.jugados?` · hoyo ${p.jugados}`:""}</small></div></div>
+      <span class="est ${p.estado==="CERRADA"?"fin":""}">${esc(p.resumen||"—")}</span></div>`;
+  };
+  return `<h1>Amistosos</h1>
+  <p class="lead">Las partidas de todos los días: match, 4-2-0 o fourball. Quedan guardadas en tu perfil.</p>
+  <button class="btn" id="nuevaAm">+ Nueva partida</button>
+  ${abiertas.length?`<h2>En juego</h2><div class="card">${abiertas.map(fila).join("")}</div>`:""}
+  ${listas.length?`<h2>Terminadas</h2><div class="card">${listas.map(fila).join("")}</div>`:""}
+  ${!AM.lista.length?`<div class="aviso" style="margin-top:12px">Todavía no jugaste ninguna. Creá la primera y quedará en tu historial.</div>`:""}`;
+}
+function vistaCanchaNueva(){
+  const tot=AM.par.reduce((x,y)=>x+(+y||0),0);
+  const fila=h=>`<div class="hoyo9"><span>${h+1}</span>
+    <input class="pin9" data-par="${h}" inputmode="numeric" value="${AM.par[h]}">
+    <input class="pin9 ix" data-idx="${h}" inputmode="numeric" placeholder="—" value="${AM.idx[h]}"></div>`;
+  return `<button class="btn volver-vivo" id="volverCan">← Volver</button>
+  <h1>Agregar una cancha</h1>
+  <p class="lead">Cargá el par de cada hoyo. El índice es opcional: si no lo sabés, la app lo estima por el par. Queda guardada para todos.</p>
+  <div class="card"><div class="row2"><div><label class="f">Nombre</label><input type="text" id="cnom" placeholder="Ej: Martindale"></div>
+    <div><label class="f">Recorrido (opcional)</label><input type="text" id="crec" placeholder="Ej: Azules"></div></div>
+    <div class="row2" style="margin-top:10px"><button class="btn sec" id="c72">Par 72 típico</button><button class="btn sec" id="c71">Par 71 típico</button></div></div>
+  <div class="card"><div class="hoyohd"><span>Hoyo</span><span>Par</span><span>Índice</span></div>
+    <div class="hoyos9">${[...Array(9)].map((_,h)=>fila(h)).join("")}</div>
+    <div class="hoyos9">${[...Array(9)].map((_,h)=>fila(h+9)).join("")}</div>
+    <div class="small muted" style="margin-top:8px">Par total: <b>${tot}</b></div></div>
+  <button class="btn" id="guardarCan">Guardar la cancha</button>
+  <div class="err">${esc(S.err)}</div>`;
+}
+function vistaNuevoAm(){
+  if(AM.canchaNueva) return vistaCanchaNueva();
+  const hcp=(S.cat&&S.cat.hcp)||{};
+  const cupo = AM.modalidad==="MATCH"?2:AM.modalidad==="P420"?3:4;
+  const jug=[...(S.cat?S.cat.jugadores:[])].sort((a,b)=>(hcp[String(a.id)]??99)-(hcp[String(b.id)]??99));
+  const elegidos=AM.sel.map(j=>esc(nomAm(j)));
+  return `<button class="btn volver-vivo" id="cancelAm">← Volver</button>
+  <h1>Nueva partida</h1>
+  <div class="card"><label class="f">Modalidad</label>
+    <select id="amod">${Object.entries(MODAL).map(([k,v])=>`<option value="${k}" ${AM.modalidad===k?"selected":""}>${v}</option>`).join("")}</select>
+    <label class="f">Cancha</label>
+    <select id="acan">${(S.cat?S.cat.canchas:[]).map(c=>`<option value="${c.id}" ${String(AM.cancha)===String(c.id)?"selected":""}>${esc(c.nombre)}${c.recorrido?" · "+esc(c.recorrido):""}</option>`).join("")}
+      <option value="NUEVA">+ Agregar una cancha nueva…</option></select>
+    <label class="f">Golpes</label>
+    <select id="ahm"><option value="DIFERENCIA" ${AM.hcp_modo==="DIFERENCIA"?"selected":""}>Por diferencia de handicap</option>
+      <option value="COMPLETO" ${AM.hcp_modo==="COMPLETO"?"selected":""}>Cada uno con su handicap completo</option></select>
+    ${AM.modalidad==="FOURBALL"?`<div class="row2"><div><label class="f">Puntos por mejor bola</label><input type="text" id="apb" value="${AM.p_bola}"></div>
+      <div><label class="f">Puntos por suma de la pareja</label><input type="text" id="aps" value="${AM.p_suma}"></div></div>
+      <div class="small muted">Poné 0 en la suma si juegan solo mejor bola.</div>`:""}
+  </div>
+  <div class="card"><h3>Jugadores <span class="pill">${AM.sel.length} de ${cupo}</span></h3>
+    ${AM.modalidad==="FOURBALL"?`<p class="small muted" style="margin:2px 0 6px">Los dos primeros que elijas son una pareja, los otros dos la rival.</p>`:""}
+    ${elegidos.length?`<div class="versus" style="margin-bottom:8px"><div class="vl b">${AM.modalidad==="FOURBALL"?elegidos.slice(0,2).join(" / "):elegidos.join(" · ")}</div>
+      ${AM.modalidad==="FOURBALL"?`<span>vs</span><div class="vl r">${elegidos.slice(2).join(" / ")||"—"}</div>`:"<span></span><span></span>"}</div>`:""}
+    ${AM.sel.filter(esInv).map(j=>`<button class="jchip b" data-am="${esc(j)}">${avAm(j)}<span class="jn">${esc(nomAm(j))}</span><span class="jh">${(AM.hcpInv&&AM.hcpInv[j])??"—"}</span></button>`).join("")}
+    <button class="btn sec" id="addInv" style="margin:8px 0">+ Agregar un invitado</button>
+    <div class="jgrid">${jug.map(j=>{ const on=AM.sel.includes(String(j.id));
+      return `<button class="jchip ${on?"b":""}" data-am="${j.id}">${avAm(j.id)}<span class="jn">${esc(j.nombre)}</span><span class="jh">${hcp[String(j.id)]??"—"}</span></button>`; }).join("")}</div>
+  </div>
+  <button class="btn" id="crearAm" ${AM.sel.length===cupo?"":"disabled"}>Empezar la partida</button>
+  <div class="err">${esc(S.err)}</div>`;
+}
+function vistaAmistoso(){
+  const p=AM.act, par=p.cancha.par;
+  const J=p.jugadores, ids=J.map(j=>j.id);
+  const puedo = ids.includes(String(S.ses.jugador.id)) || S.ses.jugador.rol==="admin";
+  const color=j=>p.modalidad==="FOURBALL"?(j.lado==="A"?"bags":"resto"):"ink";
+  const tot=j=>j.golpes.filter(x=>x!=null).reduce((a,b)=>a+b,0);
+  const marcador = p.modalidad==="P420"
+    ? `<div class="p420">${J.slice().sort((a,b)=>(p.puntos[b.id]||0)-(p.puntos[a.id]||0)).map(j=>`<div class="p4"><div>${avAm(j.id)}<b>${esc(nomAm(j.id))}</b></div><span>${p.puntos[j.id]||0}</span></div>`).join("")}</div>`
+    : `<div class="mh"><div class="lado b"><div class="nm">${J.filter(j=>p.modalidad==="MATCH"?j===J[0]:j.lado==="A").map(j=>esc(nomAm(j.id))).join("<br>")}</div></div>
+       <div class="res"><b>${esc(p.resumen)}</b><span>${p.jugados?("hoyo "+p.jugados):"por salir"}</span></div>
+       <div class="lado r"><div class="nm">${J.filter(j=>p.modalidad==="MATCH"?j===J[1]:j.lado==="B").map(j=>esc(nomAm(j.id))).join("<br>")}</div></div></div>`;
+  const tramo=(d,h)=>`<div class="tw"><table><thead>
+    <tr><th class="l">Hoyo</th>${[...Array(h-d+1)].map((_,i)=>`<th>${d+i}</th>`).join("")}<th>${d===1?"Ida":"Vuelta"}</th></tr>
+    <tr><th class="l">Par</th>${[...Array(h-d+1)].map((_,i)=>`<th>${par[d-1+i]}</th>`).join("")}<th>${par.slice(d-1,h).reduce((a,b)=>a+b,0)}</th></tr></thead><tbody>
+    ${J.map(j=>`<tr><td class="l" style="font-weight:600;color:var(--${color(j)})">${esc(nomAm(j.id))}</td>
+      ${[...Array(h-d+1)].map((_,i)=>{ const k=d-1+i, v=j.golpes[k];
+        const gano = p.hoyos[k]===j.id || (p.modalidad==="FOURBALL"&&p.hoyos[k]===j.lado) || (p.hoyos[k]||"").includes(j.id);
+        return `<td>${v==null?"·":(gano?`<span class="gb ${p.modalidad==="FOURBALL"?(j.lado==="A"?"b":"r"):"b"}">${v}</span>`:v)}</td>`; }).join("")}
+      <td><b>${j.golpes.slice(d-1,h).filter(x=>x!=null).reduce((a,b)=>a+b,0)||""}</b></td></tr>`).join("")}
+    </tbody></table></div>`;
+  const carga = !puedo?`<div class="aviso">Solo los que juegan esta partida pueden cargar golpes.</div>`:`
+    <div class="card"><h3>Cargar el hoyo</h3>
+      <div class="hoyosel">${[...Array(18)].map((_,i)=>{ const hecho=J.every(j=>j.golpes[i]!=null);
+        return `<button data-h="${i+1}" class="${AM.hoyo===i+1?"on":""} ${hecho?"hecho":""}">${i+1}</button>`; }).join("")}</div>
+      <div class="small muted">Hoyo ${AM.hoyo} · par ${par[AM.hoyo-1]}</div>
+      ${J.map(j=>{ const v=j.golpes[AM.hoyo-1];
+        return `<div class="cargaj"><div class="cj">${avAm(j.id)}<div class="nm">${esc(nomAm(j.id))}<span class="gp">${j.recibe} golpe${j.recibe===1?"":"s"}</span></div></div>
+        <div class="step"><button data-j="${j.id}" data-d="-1">−</button><b id="a${j.id}">${v??par[AM.hoyo-1]}</b><button data-j="${j.id}" data-d="1">+</button>
+        <button class="btn ok2" data-guardaAm="${j.id}">${v!=null?"✓":"Guardar"}</button></div></div>`; }).join("")}
+      <div class="err">${esc(S.err)}</div></div>`;
+  return `<button class="btn volver-vivo" id="volverAm">← Volver a amistosos</button>
+  <h1>${MODAL[p.modalidad]}</h1>
+  <p class="lead">${esc(p.cancha.nombre||"")}${p.cancha.recorrido?" "+esc(p.cancha.recorrido):""} · golpes ${p.hcp_modo==="DIFERENCIA"?"por diferencia":"completos"}${p.modalidad==="FOURBALL"?` · mejor bola ${p.p_bola}${p.p_suma?` y suma ${p.p_suma}`:""}`:""}</p>
+  <div class="mhead">${marcador}</div>
+  ${tramo(1,9)}${tramo(10,18)}
+  ${carga}
+  ${p.estado!=="CERRADA"?`<button class="btn sec" id="cerrarAm" style="margin-top:12px">Terminar y guardar la partida</button>`:`<div class="aviso">Partida terminada: ${esc(p.resumen)}</div>`}
+  ${String(p.creador)===String(S.ses.jugador.id)?`<button class="btn sec" id="borrarAm" style="margin-top:8px;color:var(--red)">Borrar esta partida</button>`:""}`;
+}
+function ligarAmistosos(){
+  const n=document.getElementById("nuevaAm");
+  if(n) n.onclick=()=>{ AM.nueva=true; AM.sel=[]; S.err=""; pintar(); };
+  document.querySelectorAll(".mrow.am").forEach(r=>r.onclick=()=>{ AM.act=null; traerAmistoso(r.dataset.p); AM.hoyo=1; });
+  const c=document.getElementById("cancelAm");
+  if(c) c.onclick=()=>{ AM.nueva=false; S.err=""; pintar(); };
+  const vc=document.getElementById("volverCan");
+  if(vc) vc.onclick=()=>{ AM.canchaNueva=false; S.err=""; pintar(); };
+  document.querySelectorAll("[data-par]").forEach(e=>e.onchange=()=>{ AM.par[+e.dataset.par]=+e.value||4; pintar(); });
+  document.querySelectorAll("[data-idx]").forEach(e=>e.onchange=()=>{ AM.idx[+e.dataset.idx]=e.value.trim(); });
+  const c72=document.getElementById("c72"); if(c72) c72.onclick=()=>{ AM.par=[4,5,4,3,4,4,5,3,4, 4,4,3,5,4,4,3,4,5]; pintar(); };
+  const c71=document.getElementById("c71"); if(c71) c71.onclick=()=>{ AM.par=[4,4,3,5,4,4,3,4,4, 4,5,4,3,4,4,5,3,4]; pintar(); };
+  const gc=document.getElementById("guardarCan");
+  if(gc) gc.onclick=async()=>{
+    gc.disabled=true; gc.textContent="Guardando…";
+    const r=await api("crearCancha",{token:tok(),nombre:document.getElementById("cnom").value,
+      recorrido:document.getElementById("crec").value,par:AM.par.join(","),idx:AM.idx.join(",")},"POST");
+    if(!r.ok){ S.err=r.error; gc.disabled=false; pintar(); return; }
+    const c=await api("catalogo"); if(c&&c.ok) S.cat=c;
+    AM.cancha=String(r.cancha_id); AM.canchaNueva=false; S.err=r.existia?"Esa cancha ya estaba cargada: la dejamos seleccionada":""; pintar();
+  };
+  ["amod","acan","ahm","apb","aps"].forEach(id=>{ const e=document.getElementById(id); if(!e) return;
+    e.onchange=()=>{ if(id==="amod"){ AM.modalidad=e.value; AM.sel=[]; } if(id==="acan"){ if(e.value==="NUEVA"){ AM.canchaNueva=true; S.err=""; pintar(); return; } AM.cancha=e.value; }
+      if(id==="ahm") AM.hcp_modo=e.value; if(id==="apb") AM.p_bola=+e.value||0; if(id==="aps") AM.p_suma=+e.value||0; pintar(); }; });
+  const ai=document.getElementById("addInv");
+  if(ai) ai.onclick=()=>{
+    const cupo=AM.modalidad==="MATCH"?2:AM.modalidad==="P420"?3:4;
+    if(AM.sel.length>=cupo){ S.err="Ya están todos los jugadores; sacá a alguno primero"; pintar(); return; }
+    const n=prompt("Nombre del invitado"); if(!n||!n.trim()) return;
+    const h=prompt("Handicap del invitado","18"); if(h===null) return;
+    const id="INV:"+n.trim();
+    AM.hcpInv[id]=Math.max(0,Math.min(54,+h||0)); AM.sel.push(id); S.err=""; pintar();
+  };
+  document.querySelectorAll("[data-am]").forEach(b=>b.onclick=()=>{
+    const j=b.dataset.am, cupo=AM.modalidad==="MATCH"?2:AM.modalidad==="P420"?3:4;
+    const i=AM.sel.indexOf(j);
+    if(i>=0) AM.sel.splice(i,1); else { if(AM.sel.length>=cupo) AM.sel.shift(); AM.sel.push(j); }
+    pintar();
+  });
+  const cr=document.getElementById("crearAm");
+  if(cr) cr.onclick=async()=>{
+    cr.disabled=true; cr.textContent="Creando…";
+    const lados = AM.modalidad==="FOURBALL" ? ["A","A","B","B"] : AM.modalidad==="MATCH" ? ["A","B"] : ["1","2","3"];
+    const hcps=AM.sel.map(j=>esInv(j)?(AM.hcpInv[j]||0):((S.cat.hcp||{})[String(j)]||0)).join(",");
+    const r=await api("crearAmistoso",{token:tok(),modalidad:AM.modalidad,cancha_id:AM.cancha||(S.cat.canchas[0]||{}).id,
+      hcp_modo:AM.hcp_modo,p_bola:AM.p_bola,p_suma:AM.p_suma,jugadores:AM.sel.join(","),lados:lados.join(","),hcps},"POST");
+    if(!r.ok){ S.err=r.error; cr.disabled=false; pintar(); return; }
+    AM.nueva=false; AM.lista=null; AM.hoyo=1; await traerAmistoso(r.partida_id); traerAmistosos();
+  };
+  const v=document.getElementById("volverAm");
+  if(v) v.onclick=()=>{ AM.act=null; traerAmistosos(); };
+  document.querySelectorAll(".hoyosel button").forEach(b=>b.onclick=()=>{ AM.hoyo=+b.dataset.h; pintar(); });
+  document.querySelectorAll(".step button[data-d]").forEach(b=>b.onclick=()=>{
+    const el=document.getElementById("a"+b.dataset.j); if(el) el.textContent=Math.max(1,Math.min(15,+el.textContent+ +b.dataset.d)); });
+  document.querySelectorAll("[data-guardaAm]").forEach(b=>b.onclick=async()=>{
+    const j=b.dataset.guardaam||b.getAttribute("data-guardaAm"), g=+document.getElementById("a"+j).textContent;
+    b.disabled=true; b.textContent="…";
+    const r=await api("cargarGolpe",{token:tok(),match_id:AM.act.partida_id,jugador_id:j,hoyo:AM.hoyo,golpes:g},"POST");
+    if(!r.ok){ S.err=r.error; b.disabled=false; pintar(); return; }
+    S.err=""; await traerAmistoso(AM.act.partida_id);
+  });
+  const ca=document.getElementById("cerrarAm");
+  if(ca) ca.onclick=async()=>{
+    if(!confirm("¿Terminar la partida? Queda guardada en el historial.")) return;
+    const r=await api("cerrarAmistoso",{token:tok(),partida_id:AM.act.partida_id},"POST");
+    if(!r.ok){ S.err=r.error; pintar(); return; }
+    AM.lista=null; await traerAmistoso(AM.act.partida_id); traerAmistosos();
+  };
+  const ba=document.getElementById("borrarAm");
+  if(ba) ba.onclick=async()=>{
+    if(!confirm("¿Borrar la partida y todos sus golpes?")) return;
+    const r=await api("borrarAmistoso",{token:tok(),partida_id:AM.act.partida_id},"POST");
+    if(!r.ok){ S.err=r.error; pintar(); return; }
+    AM.act=null; AM.lista=null; traerAmistosos();
+  };
+}
+/* resumen de amistosos para el perfil */
+function resumenAm(id){
+  if(!AM.lista||!AM.lista.length) return "";
+  const mias=AM.lista.filter(p=>p.jugadores.some(j=>String(j.id)===String(id)));
+  const inv=mias.filter(p=>p.jugadores.some(j=>esInv(j.id))).length;
+  if(!mias.length) return "";
+  const cerradas=mias.filter(p=>p.estado==="CERRADA");
+  let g=0,e=0,pd=0;
+  cerradas.forEach(p=>{
+    const yo=p.jugadores.find(j=>String(j.id)===String(id));
+    const lider=p.modalidad==="FOURBALL"?p.lider:String(p.lider||"");
+    if(!lider) e++;
+    else if(p.modalidad==="FOURBALL") (lider===yo.lado)?g++:pd++;
+    else (String(lider)===String(id))?g++:pd++;
+  });
+  return `<h2>Amistosos</h2>
+  <div class="kpis kpi4"><div class="kpi"><div class="big">${mias.length}</div><div class="lb">partidas</div></div>
+    <div class="kpi"><div class="big verde">${g}</div><div class="lb">ganadas</div></div>
+    <div class="kpi"><div class="big">${e}</div><div class="lb">empatadas</div></div>
+    <div class="kpi"><div class="big rojo">${pd}</div><div class="lb">perdidas</div></div></div>
+  ${inv?`<p class="small muted" style="margin:8px 4px 0">${inv} ${inv===1?"partida jugada":"partidas jugadas"} con invitados.</p>`:""}
+  <div class="card pad" style="margin-top:10px"><ul class="rows">${mias.slice(0,5).map(p=>`<li><div class="small"><b>${MODAL[p.modalidad]}</b> · ${esc(p.cancha.nombre||"")}
+    <div class="muted">${p.jugadores.map(j=>esc(nomAm(j.id))).join(" · ")}</div></div><span class="r">${esc(p.resumen||"—")}</span></li>`).join("")}</ul></div>`;
+}
+
 /* ═════════ CÁSCARA: ingreso, pestañas y ruteo ═════════ */
 const NAVSTATS=[["estadisticas","Resumen"],["temporada","Temporadas"],["fecha","Fechas"],["jugador","Jugadores"],["ryderhist","Ryder"],["canchas","Canchas"]];
 function ruta(){ const p=(location.hash||"#/inicio").split("/").filter(Boolean); return {r:(p[1]||"inicio"),a:decodeURIComponent(p[2]||""),b:decodeURIComponent(p[3]||"")}; }
-const TABDE = r => ["vivo","match","armar","hcp"].includes(r) ? "vivo" : (r==="inicio"?"inicio":"stats");
+const TABDE = r => ["vivo","match","armar","hcp"].includes(r) ? "vivo" : (r==="inicio"?"inicio":(r==="amistosos"?"amis":"stats"));
 
 function vistaPerfil(){
   const id=S.ses.jugador.id;
@@ -1643,6 +1898,7 @@ function vistaPerfil(){
     <a class="card lkcard" href="#/jugador/${id}"><b>Ver tu ficha completa</b><span class="muted small">águilas, premios, mano a mano y todo tu historial</span></a>
     <a class="card lkcard" href="#/estadisticas"><b>Estadísticas del Tour</b><span class="muted small">medallero, récords, temporadas y canchas</span></a>
   </div>
+  ${resumenAm(id)}
   ${cuch?`<p class="small muted" style="margin-top:12px">Tenés ${cuch} cuchara${cuch===1?"":"s"} de madera. Que no sume otra este año.</p>`:""}`;
 }
 V.inicio = vistaPerfil;
@@ -1654,20 +1910,24 @@ function pintar(){
   const {r,a}=ruta(), tab=TABDE(r), j=S.ses.jugador, admin=j.rol==="admin";
   let cuerpo="";
   try{
-    if(tab==="vivo") cuerpo = r==="armar" ? (A.cruce?vistaCruce():vistaArmar()) : r==="hcp" ? vistaHcp() : (S.match?vistaMatch():vistaVivo());
+    if(tab==="amis") cuerpo = vistaAmistosos();
+    else if(tab==="vivo") cuerpo = r==="armar" ? (A.cruce?vistaCruce():vistaArmar()) : r==="hcp" ? vistaHcp() : (S.match?vistaMatch():vistaVivo());
     else if(tab==="inicio") cuerpo = vistaPerfil();
     else cuerpo = DB ? (V[r]?V[r](a):V.estadisticas("")) : `<div class="load">Cargando estadísticas…</div>`;
   }catch(e){ cuerpo=`<h1>No se pudo mostrar esta página</h1><p class="lead">${esc(e.message)}</p>`; console.error(e); }
   const enVivo = S.est && S.est.evento;
+  const pend = pendientes().length;
   app().innerHTML=`
   <div class="top"><img src="${LOGO.tour}" alt=""><div class="t">Chaqueta Tour</div>
     ${tab==="vivo"?`<button class="icon" id="recargar">↻</button>`:""}<button class="icon" id="menu">☰</button></div>
   ${tab==="stats"?`<nav class="nav2">${NAVSTATS.map(([k,t])=>`<a href="#/${k}" class="${r===k||(k==="estadisticas"&&r==="records")?"on":""}">${t}</a>`).join("")}</nav>`:""}
   ${tab==="vivo"&&admin?`<nav class="nav2">${[["vivo","En juego"],["armar","Armar"],["hcp","Handicaps"]].map(([k,t])=>`<a href="#/${k}" class="${r===k||(k==="vivo"&&r==="match")?"on":""}">${t}</a>`).join("")}</nav>`:""}
+  ${pend?`<div class="pend">📴 ${pend} ${pend===1?"hoyo guardado en el teléfono":"hoyos guardados en el teléfono"}: se mandan solos al volver la señal · <button id="reintentar">Reintentar ahora</button></div>`:""}
   <main>${cuerpo}</main>
   <div class="tabs">
     <button data-go="#/vivo" class="${tab==="vivo"?"on":""}"><b>◉</b>Vivo${enVivo?`<i class="punto"></i>`:""}</button>
     <button data-go="#/inicio" class="${tab==="inicio"?"on":""}"><b>👤</b>Inicio</button>
+    <button data-go="#/amistosos" class="${tab==="amis"?"on":""}"><b>⛳</b>Amistosos</button>
     <button data-go="#/estadisticas" class="${tab==="stats"?"on":""}"><b>📊</b>Estadísticas</button>
   </div>
   <div class="drawer" id="drawer"><div class="dpanel">
@@ -1691,11 +1951,14 @@ function ligarShell(tab,r,a){
   if(cp) cp.onclick=async()=>{ const p=prompt("Nuevo PIN de 4 números"); if(!p) return;
     const x=await api("cambiarPin",{token:tok(),pin_nuevo:p},"POST"); alert(x.ok?"Listo, PIN cambiado":x.error); };
   const rc=document.getElementById("recargar"); if(rc) rc.onclick=()=>refrescar(true);
+  const rt=document.getElementById("reintentar");
+  if(rt) rt.onclick=async()=>{ rt.textContent="Enviando…"; const n=await enviarPendientes(); S.err=n?"":"Todavía sin señal"; await refrescar(true); };
   document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{ S.match=null; S.err=""; location.hash=b.dataset.go; });
   const im=document.getElementById("irMatch");
   if(im) im.onclick=()=>{ const m=document.querySelector(".mrow[data-m]"); S.match=m.dataset.m;
     const mm=S.est.matches.find(x=>x.match_id===S.match); S.hoyo=Math.min(18,(mm.jugados||0)+1); location.hash="#/vivo"; };
-  if(tab==="vivo") ligar();
+  if(tab==="amis") ligarAmistosos();
+  else if(tab==="vivo") ligar();
   else if(tab==="stats" && DB && V[r] && V[r].after) V[r].after(a);
 }
 /* ligar() del módulo en vivo sin volver a dibujar la cáscara */
@@ -1714,8 +1977,12 @@ function ligar(){
   document.querySelectorAll("[data-guardar]").forEach(b=>b.onclick=async()=>{
     const j=b.dataset.guardar, g=+document.getElementById("g"+j).textContent;
     b.disabled=true; b.textContent="…";
-    const x=await api("cargarGolpe",{token:tok(),match_id:S.match,jugador_id:j,hoyo:S.hoyo,golpes:g},"POST");
-    if(!x.ok){ S.err=x.error; b.disabled=false; pintar(); return; }
+    const datos={match_id:S.match,jugador_id:j,hoyo:S.hoyo,golpes:g};
+    const x=await api("cargarGolpe",Object.assign({token:tok()},datos),"POST");
+    if(!x.ok){
+      if(/Sin conexión/.test(x.error||"")){ encolar(datos); S.err="Sin señal: el hoyo quedó guardado y se manda solo cuando vuelva"; }
+      else S.err=x.error;
+      b.disabled=false; pintar(); return; }
     S.err=""; await refrescar(true);
   });
   const ce=document.getElementById("cerrarEv");
@@ -1744,6 +2011,7 @@ function ligarHcp(){
 async function refrescar(forzar){
   if(S.cargando && !forzar) return;
   S.cargando=true;
+  if(pendientes().length) await enviarPendientes();
   const r=await api("estado",{token:tok()});
   if(r && r.ok) S.est=r;
   S.cargando=false; pintar();
@@ -1755,12 +2023,15 @@ async function cargarHistorico(){
 async function arrancar(){
   pintar();
   cargarHistorico();
+  traerAmistosos();
   const c=await api("catalogo"); if(c && c.ok) S.cat=c;
   const p=await api("pinActivo"); S.pin=!!(p&&p.pin);
   await refrescar(true);
-  if(!window.__timer) window.__timer=setInterval(()=>{ if(S.ses && !document.hidden && TABDE(ruta().r)==="vivo") refrescar(); },20000);
+  if(!window.__timer) window.__timer=setInterval(()=>{ if(S.ses && !document.hidden && TABDE(ruta().r)==="vivo") refrescar(); },45000);
+  addEventListener("online",()=>{ if(S.ses) refrescar(true); });
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden && S.ses) refrescar(true); });
 }
-addEventListener("hashchange",()=>{ S.match=null; pintar(); scrollTo(0,0); });
+addEventListener("hashchange",()=>{ S.match=null; if(TABDE(ruta().r)!=="amis"){ AM.act=null; AM.nueva=false; } pintar(); scrollTo(0,0); });
 (function(){
   try{ const t=localStorage.getItem("ct-tema"); document.documentElement.setAttribute("data-theme",t||"dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }
   recuperar();
