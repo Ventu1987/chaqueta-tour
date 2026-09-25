@@ -561,6 +561,10 @@ h3.bagsc{color:var(--bags)}h3.restoc{color:var(--resto)}
 .av.inv{background:var(--ink3);color:#fff}
 .pend{background:var(--goldbg);color:var(--gold);font-size:12.5px;font-weight:600;padding:8px 14px;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
 .pend button{background:none;border:1px solid currentColor;color:inherit;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.cfg{text-align:left;background:var(--soft);border-radius:12px;padding:12px;margin-top:10px}
+.cfg label{display:block;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:6px}
+.cfg input{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:9px;font-size:11.5px;font-family:inherit;text-align:left;letter-spacing:0}
+.okmsg{color:var(--green);font-size:12px;margin-top:8px}
 .diag{text-align:left;white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.4;background:var(--soft);border-radius:10px;padding:10px;margin-top:10px;max-height:240px;overflow:auto}
 .load{padding:40px 10px;text-align:center;color:var(--ink3);font-size:13.5px}
 .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--goldbg);color:var(--gold)}
@@ -1269,14 +1273,26 @@ function sesionVencida(r){
     S.err="Tu sesión venció, volvé a entrar"; pintar(); return true; }
   return false;
 }
+function apiURL(){ try{ return localStorage.getItem("ct-api")||API; }catch(e){ return API; } }
+function fijarURL(u){ try{ localStorage.setItem("ct-api",u); }catch(e){} }
+async function probarURL(u){
+  try{
+    const r=await fetch(u+"?accion=pinActivo",{cache:"no-store",redirect:"follow"});
+    const t=await r.text();
+    try{ const j=JSON.parse(t); return j.ok?{ok:true}:{ok:false,msg:"Responde, pero con error: "+(j.error||"")}; }
+    catch(e){ return {ok:false,msg:/accounts\.google\.com|Sign in|Iniciar sesión/i.test(t)
+      ? "Pide iniciar sesión: en la implementación, 'Quién tiene acceso' tiene que ser Cualquier usuario."
+      : "Responde algo que no es JSON (HTTP "+r.status+"). Suele ser una implementación vieja o un error del script."}; }
+  }catch(e){ return {ok:false,msg:"No contesta: "+e.message+". Revisá que la dirección termine en /exec."}; }
+}
 async function api(accion, datos={}, metodo="GET"){
   let r=null, txt="";
   try{
     if(metodo==="GET"){
       const q=new URLSearchParams(Object.assign({accion},datos)).toString();
-      r=await fetch(API+"?"+q,{cache:"no-store",redirect:"follow"});
+      r=await fetch(apiURL()+"?"+q,{cache:"no-store",redirect:"follow"});
     } else {
-      r=await fetch(API,{method:"POST",redirect:"follow",body:JSON.stringify(Object.assign({accion},datos)),
+      r=await fetch(apiURL(),{method:"POST",redirect:"follow",body:JSON.stringify(Object.assign({accion},datos)),
         headers:{"Content-Type":"text/plain;charset=utf-8"}});
     }
     txt=await r.text();
@@ -1324,10 +1340,26 @@ function vistaLogin(){
     ${L.paso===1?p1:p2}
     <div class="err">${esc(S.err)}</div>
     ${S.err?`<button class="volver" id="verDiag">Ver detalle técnico</button>`:""}
+    <button class="volver" id="verCfg">⚙ Configurar servidor</button>
+    ${S.cfgVisible?`<div class="cfg"><label>Dirección del script (termina en /exec)</label>
+      <input id="apiurl" value="${esc(apiURL())}">
+      <button class="btn sec" id="probarUrl">Probar conexión</button>
+      <div class="small ${S.cfgOk?"okmsg":"err"}">${esc(S.cfgMsg||"")}</div></div>`:""}
     ${S.diagVisible?`<pre class="diag">${esc(S.diag||"Sin detalle")}</pre>`:""}
   </div></div>`;
 }
 function ligarLogin(){
+  const vc2=document.getElementById("verCfg");
+  if(vc2) vc2.onclick=()=>{ S.cfgVisible=!S.cfgVisible; pintar(); };
+  const pu=document.getElementById("probarUrl");
+  if(pu) pu.onclick=async()=>{
+    const u=document.getElementById("apiurl").value.trim().replace(/\/+$/,"");
+    if(!/\/exec$/.test(u)){ S.cfgOk=false; S.cfgMsg="La dirección tiene que terminar en /exec"; pintar(); return; }
+    pu.textContent="Probando…"; const r=await probarURL(u);
+    S.cfgOk=r.ok; S.cfgMsg=r.ok?"Conexión correcta, ya quedó guardada":r.msg;
+    if(r.ok){ fijarURL(u); S.err=""; }
+    pintar();
+  };
   const vd=document.getElementById("verDiag");
   if(vd) vd.onclick=()=>{ S.diagVisible=!S.diagVisible; pintar(); };
   if(L.paso===1){
