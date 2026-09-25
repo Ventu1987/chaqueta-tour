@@ -582,7 +582,7 @@ footer{max-width:1080px;margin:0 auto;padding:0 16px 40px;color:var(--ink3);font
 <body>
 <div id="app"><div class="load">Cargando…</div></div>
 <script>
-const API="https://script.google.com/macros/s/AKfycbzb53lJrepi-YIIEb1HrDFxn3mdYKQUDMFOec68kUAHDNmy9bJdcDYmjFo3cPfGC1Wksw/exec";
+const API="https://script.google.com/macros/s/AKfycbxpmxwMfJAYSNSfQy7e_oM0vRhI1DUwr7PNLe-5E7jYj4Up7lL6vfy_dBzeI0RQUpVqew/exec";
 let DB=null;
 /* ════════════════════════════════════════════════════════════
    DATOS
@@ -1284,6 +1284,30 @@ const tok = () => S.ses ? S.ses.token : "";
 function guardar(){ try{ localStorage.setItem("ct-ses",JSON.stringify(S.ses)); }catch(e){} }
 function recuperar(){ try{ const v=localStorage.getItem("ct-ses"); if(v) S.ses=JSON.parse(v); }catch(e){} }
 const avatar=(id,cls="")=>av(id,cls,true);
+const eqDe = id => equipo(+id);
+const app = () => document.getElementById("app");
+
+/* ═══ INGRESO ═══ */
+let L = {paso:1, matricula:"", jugador:null, pin:""};
+function vistaLogin(){
+  const p1 = `
+    <label>Ingresá tu matrícula de la AAG</label>
+    <input id="mat" inputmode="numeric" placeholder="000000" value="${esc(L.matricula)}">
+    <button class="btn" id="seguir">Continuar →</button>`;
+  const p2 = `
+    <div class="tt" style="margin-top:18px">${esc(L.jugador?.nombre||"")}</div>
+    <label style="margin-top:6px">Ingresá tu PIN</label>
+    <div class="pinbox">${[0,1,2,3].map(i=>`<i class="${L.pin.length>i?"on":""}"></i>`).join("")}</div>
+    <div class="keys">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join("")}
+      <button data-k="borrar">⌫</button><button data-k="0">0</button><button data-k="ok">✓</button></div>
+    <button class="volver" id="atras">← Cambiar matrícula</button>`;
+  return `<div class="login"><div class="lcard">
+    <img class="esc" src="${LOGO.tour}" alt="">
+    <div class="tt">Chaqueta Tour</div><div class="st">EL TOUR EN TU BOLSILLO</div>
+    ${L.paso===1?p1:p2}
+    <div class="err">${esc(S.err)}</div>
+  </div></div>`;
+}
 function ligarLogin(){
   if(L.paso===1){
     const i=document.getElementById("mat");
