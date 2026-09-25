@@ -416,7 +416,6 @@ td.med.o{color:#D4A017} td.med.p{color:#9AA5B1} td.med.b{color:#B06B3A}
 .pinbox{display:flex;justify-content:center;gap:14px;margin:18px 0 6px}
 .pinbox i{width:16px;height:16px;border-radius:50%;border:2px solid var(--ink3);display:block}
 .pinbox i.on{background:var(--gold);border-color:var(--gold)}
-.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
 .keys button{background:var(--soft);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:16px 0;
   font-family:var(--cond);font-size:26px;font-weight:700;cursor:pointer}
 .keys button:active{background:var(--goldbg)}
@@ -424,7 +423,6 @@ td.med.o{color:#D4A017} td.med.p{color:#9AA5B1} td.med.b{color:#B06B3A}
 .volver{margin-top:16px;background:none;border:0;color:var(--ink2);font-size:13.5px;cursor:pointer}
 
 /* ── barra ── */
-.top{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
 .top img{height:30px}
 .top .t{font-family:var(--cond);font-weight:700;font-size:19px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .icon{background:rgba(255,255,255,.12);border:0;color:#fff;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:16px}
@@ -442,7 +440,6 @@ td.med.o{color:#D4A017} td.med.p{color:#9AA5B1} td.med.b{color:#B06B3A}
   padding:15px 16px;color:var(--ink);font-size:15px;font-weight:600;text-align:left;text-decoration:none;cursor:pointer}
 
 /* ── tarjetas ── */
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;box-shadow:var(--shadow)}
 .card+.card{margin-top:10px}
 .marcador{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
 .marcador .n{font-family:var(--cond);font-weight:700;font-size:54px;line-height:1}
@@ -460,7 +457,6 @@ td.med.o{color:#D4A017} td.med.p{color:#9AA5B1} td.med.b{color:#B06B3A}
 .est{font-family:var(--cond);font-weight:700;font-size:17px;padding:4px 10px;border-radius:8px;background:var(--soft);white-space:nowrap}
 .est.b{background:var(--bagsbg);color:var(--bags)}.est.r{background:var(--restobg);color:var(--resto)}
 .est.fin{outline:2px solid var(--gold)}
-.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--ink2)}
 .sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 8px}
 .sec-h .f{font-family:var(--cond);font-weight:700;font-size:20px}
 
@@ -474,7 +470,6 @@ td.med.o{color:#D4A017} td.med.p{color:#9AA5B1} td.med.b{color:#B06B3A}
 .mh .res{padding:10px 12px;text-align:center}
 .mh .res b{font-family:var(--cond);font-size:26px;display:block;line-height:1}
 .mh .res span{font-size:11px;color:var(--ink3)}
-.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:12px;background:var(--card)}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{padding:7px 4px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
 th{background:var(--soft);color:var(--ink3);font-size:11px;font-weight:600}
@@ -508,7 +503,6 @@ select,input[type=text],input[type=date],input[type=time]{width:100%;background:
 .aviso{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink2);margin-top:10px}
 
 /* avatares */
-.av{flex:none;width:30px;height:30px;border-radius:50%;overflow:hidden;display:inline-grid;place-items:center;background:var(--soft)}
 .av img{width:100%;height:100%;object-fit:cover;display:block}
 .av.ini{background:var(--gold);color:#0A1F3D;font-weight:700;font-size:11.5px}
 .av.lg{width:46px;height:46px}.av.lg.ini{font-size:17px}
@@ -566,8 +560,28 @@ h3.bagsc{color:var(--bags)}h3.restoc{color:var(--resto)}
 .cfg input{width:100%;background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:9px;font-size:11.5px;font-family:inherit;text-align:left;letter-spacing:0}
 .okmsg{color:var(--green);font-size:12px;margin-top:8px}
 .diag{text-align:left;white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.4;background:var(--soft);border-radius:10px;padding:10px;margin-top:10px;max-height:240px;overflow:auto}
-.load{padding:40px 10px;text-align:center;color:var(--ink3);font-size:13.5px}
+
+/* detalle de una marca */
+.mark .dif{font-family:Inter,sans-serif;font-size:.42em;font-weight:600;color:var(--ink3);vertical-align:middle;margin-left:4px}
+.mark .dif.bajo{color:var(--c-bi)}
+.hchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.hchip{font-size:11px;font-weight:600;background:var(--soft);border-radius:999px;padding:3px 8px}
+.accs{display:grid;grid-template-columns:1fr;gap:8px;margin-top:14px}
+@media(min-width:520px){.accs{grid-template-columns:1fr 1fr}}
+.accs .btn{margin:0}
+
+/* solapas internas (leaderboard / tarjetas / hoyo a hoyo) */
+.segs{display:flex;gap:6px;overflow-x:auto;margin:16px 0 12px;padding-bottom:2px}
+.segs button{flex:none;font:inherit;font-size:13.5px;font-weight:600;padding:9px 15px;border-radius:999px;
+  background:var(--card);border:1px solid var(--line);color:var(--ink2);cursor:pointer}
+.segs button.on{background:var(--gold);border-color:var(--gold);color:#0A1F3D}
 .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--goldbg);color:var(--gold)}
+
+/* ajustes propios del módulo en vivo, sin pisar al histórico */
+.av img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.av.ini{background:var(--gold);color:#0A1F3D;font-weight:700}
+.av.inv{background:var(--ink3);color:#fff}
+.lcard .load, main .load{padding:36px 10px;text-align:center;color:var(--ink3);font-size:13.5px}
 
 /* ── cáscara unificada ── */
 body{padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
@@ -944,7 +958,7 @@ V.temporada = (arg) => {
   <div class="pills">${DB.temporadas.map(x=>`<a href="#/temporada/${x}" class="${x===t?"on":""}">${x}</a>`).join("")}</div>
   <h1>Temporada ${t}</h1>
   <p class="lead">${regla} Tope de handicap ${c.hcp_maximo??"—"}. ${esc(nom(ch.jid))} se llevó la chaqueta con ${fmt(ch.total)} puntos.</p>
-  <div class="tabs" id="segT">
+  <div class="segs" id="segT">
     <button data-m="tabla" class="${modoTemp==="tabla"?"on":""}">Tabla general</button>
     <button data-m="stats" class="${modoTemp==="stats"?"on":""}">Estadísticas</button></div>
   ${modoTemp==="tabla"?tablaGeneral:estad}`;
@@ -992,7 +1006,7 @@ V.fecha = (arg) => {
     <div class="card pad"><div class="small muted">Premios</div><div style="margin-top:8px;display:grid;gap:8px">
       ${ba.map(r=>pl(r.jid,"Best Approach")).join("")}${ld.map(r=>pl(r.jid,"Long Drive")).join("")}${bsd.map(r=>pl(r.jid,"Approach o Long Drive")).join("")}${!ba.length&&!ld.length&&!bsd.length?`<span class="muted small">No se entregaron</span>`:""}</div></div>
   </div>
-  <div class="tabs" id="segF">
+  <div class="segs" id="segF">
     <button data-m="tabla" class="${modoFecha==="tabla"?"on":""}">Leaderboard</button>
     <button data-m="tarj" class="${modoFecha==="tarj"?"on":""}">Tarjetas</button>
     <button data-m="graf" class="${modoFecha==="graf"?"on":""}">Hoyo a hoyo</button></div>
@@ -1426,7 +1440,7 @@ function vistaArmar(){
   if(!S.cat) return `<div class="load">Cargando datos…</div>`;
   if(!A.evento){
     const hoy=new Date().toISOString().slice(0,10);
-    return `<h1>Armar la Ryder</h1><p class="lead">Se arma en tres pasos: el evento, las sesiones y los cruces.</p>
+    return `<h1>Armar la Ryder</h1><p class="lead">Todo en una pantalla: creás el evento, le agregás las sesiones y dentro de cada una los cruces. Podés borrarlo entero en cualquier momento.</p>
     <div class="card"><div class="paso"><b>1</b> El evento</div>
       <label class="f">Nombre</label><input type="text" id="an" value="Ryder Cup ${new Date().getFullYear()}">
       <div class="row2"><div><label class="f">Cancha</label>
@@ -1460,6 +1474,7 @@ function vistaArmar(){
       <div><label class="f">Formato</label><select id="sf">${Object.entries(FORMATOS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></div></div>
     <button class="btn sec" id="addses">Agregar sesión</button></div>
   ${total?`<button class="btn" id="activar">Empezar el evento ▶</button>`:`<div class="aviso">Agregá al menos un cruce para poder empezar.</div>`}
+  <button class="btn sec" id="borrarEv" style="margin-top:8px;color:var(--red)">Borrar este evento y todo lo cargado</button>
   <div class="err">${esc(S.err)}</div>`;
 }
 function vistaCruce(){
@@ -1523,7 +1538,9 @@ function vistaVivo(){
       </div>`; }).join("")}</div>`;
   }).join("")}
   <p class="small muted" style="margin-top:14px">Se actualiza solo cada 20 segundos. Tocá un cruce para ver la tarjeta y cargar golpes.</p>
-  ${S.ses.jugador.rol==="admin"&&e.evento.estado==="EN_JUEGO"?`<button class="btn sec" id="cerrarEv" style="margin-top:8px">Cerrar el evento y guardarlo</button>`:""}
+  ${S.ses.jugador.rol==="admin"?`<div class="accs">
+    ${e.evento.estado==="EN_JUEGO"?`<button class="btn" id="cerrarEv">💾 Guardar y terminar</button>`:""}
+    <button class="btn sec" id="borrarEv" style="color:var(--red)">🗑 Borrar la partida</button></div>`:""}
   ${S.ses.jugador.rol==="admin"&&e.evento.estado==="BORRADOR"?`<div class="aviso">Este evento todavía está en borrador: solo lo ves vos. Empezalo desde la pestaña Armar.</div>`:""}`;
 }
 function vistaMatch(){
@@ -1845,8 +1862,11 @@ function vistaAmistoso(){
   <div class="mhead">${marcador}</div>
   ${tramo(1,9)}${tramo(10,18)}
   ${carga}
-  ${p.estado!=="CERRADA"?`<button class="btn sec" id="cerrarAm" style="margin-top:12px">Terminar y guardar la partida</button>`:`<div class="aviso">Partida terminada: ${esc(p.resumen)}</div>`}
-  ${String(p.creador)===String(S.ses.jugador.id)?`<button class="btn sec" id="borrarAm" style="margin-top:8px;color:var(--red)">Borrar esta partida</button>`:""}`;
+  ${p.estado==="CERRADA"?`<div class="aviso">Partida terminada y guardada: ${esc(p.resumen)}</div>`:""}
+  <div class="accs">
+    ${p.estado!=="CERRADA"?`<button class="btn" id="cerrarAm">💾 Guardar y terminar</button>`:""}
+    ${String(p.creador)===String(S.ses.jugador.id)?`<button class="btn sec" id="borrarAm" style="color:var(--red)">🗑 Borrar la partida</button>`:""}
+  </div>`;
 }
 function ligarAmistosos(){
   const n=document.getElementById("nuevaAm");
@@ -1960,19 +1980,20 @@ function vistaPerfil(){
   const J=DB.jug.get(+id);
   if(!J) return `<h1>Hola</h1><p class="lead">Todavía no tenés estadísticas cargadas en el Tour.</p>`;
   const R=DB.res.filter(r=>r.jid===+id), P=R.filter(presente), VV=vueltas().filter(v=>v.r.jid===+id);
+  const hcp=(S.est&&S.est.hcp&&S.est.hcp[String(id)])??((S.cat&&S.cat.hcp&&S.cat.hcp[String(id)])??(statsTemp(DB.temporadas[0]).find(x=>x.jid===+id)||{}).hcp);
   const C=campeones(), tit=C.filter(c=>c.top[0]&&c.top[0].jid===+id).map(c=>c.t);
   const pod=C.map(c=>({t:c.t,f:c.T.filas.find(x=>x.jid===+id)})).filter(x=>x.f&&x.f.pos<=3&&x.f.pos>1);
   const wins=ganadores().filter(x=>x.r.jid===+id);
   const best=VV.length?VV.reduce((a,v)=>v.gross<a.gross?v:a):null;
   const bestN=VV.filter(v=>v.r.neto!=null).reduce((a,v)=>(!a||v.r.neto<a.r.neto)?v:a,null);
-  const hcp=(S.est&&S.est.hcp&&S.est.hcp[String(id)])??(statsTemp(DB.temporadas[0]).find(x=>x.jid===+id)||{}).hcp;
+
   const prom=VV.length?VV.reduce((a,v)=>a+v.gross,0)/VV.length:null;
   const cuch=P.filter(r=>r.medal<0).length;
   const ultima5=[...VV].sort((a,b)=>b.f.t-a.f.t||b.f.n-a.f.n).slice(0,5);
   const miMatch=(S.est&&S.est.evento)?S.est.matches.find(m=>m.bags.concat(m.resto).map(String).includes(String(id))):null;
   return `
   <section class="prof">${av(+id,"xl",true)}<div><h1>${esc(J.tour)}</h1>
-    <div class="meta">${esc(J.nombre)} ${esc(J.apellido)}${J.mat?` · matrícula ${esc(J.mat)}`:""}</div>
+    <div class="meta">${J.mat?`Matrícula ${esc(J.mat)}`:""}${hcp!=null?` · handicap ${fmt(hcp)}`:""}</div>
     ${equipo(+id)?`<div class="teamline"><img src="${LOGO[equipo(+id)]}" alt="">${EQNOM[equipo(+id)]}</div>`:""}
     ${tit.length||pod.length?`<div class="ttl">${tit.map(t=>`<span>Campeón ${t}</span>`).join("")}${pod.map(x=>`<span class="alt">${x.f.pos}° en ${x.t}</span>`).join("")}</div>`:""}</div></section>
   ${miMatch?`<div class="card hl" style="margin-top:12px"><div class="small muted">Estás jugando ahora</div>
@@ -1989,8 +2010,8 @@ function vistaPerfil(){
   </div>
   <h2>Tus mejores marcas</h2>
   <div class="marks">
-    ${best?`<div class="mark"><div class="lb">Mejor vuelta</div><div class="big">${best.gross}</div><div class="ctx">${ctxLink(best.f)}</div></div>`:""}
-    ${bestN?`<div class="mark"><div class="lb">Mejor neto</div><div class="big under">${bestN.r.neto}</div><div class="ctx">${ctxLink(bestN.f)}</div></div>`:""}
+    ${best?marcaVuelta("Mejor vuelta (gross)",best.gross,best,best.gross-best.c.parT):""}
+    ${bestN?marcaVuelta("Mejor neto",bestN.r.neto,bestN,bestN.r.neto-bestN.c.parT):""}
   </div>
   <h2>Tus últimas fechas</h2>
   <div class="lb"><div class="tw"><table><thead><tr><th class="l">Fecha</th><th class="l">Cancha</th><th>Gross</th><th>Neto</th><th>Puesto</th><th>Pts</th></tr></thead>
@@ -2001,11 +2022,40 @@ function vistaPerfil(){
     <a class="card lkcard" href="#/jugador/${id}"><b>Ver tu ficha completa</b><span class="muted small">águilas, premios, mano a mano y todo tu historial</span></a>
     <a class="card lkcard" href="#/estadisticas"><b>Estadísticas del Tour</b><span class="muted small">medallero, récords, temporadas y canchas</span></a>
   </div>
+  ${resumenRyder(id)}
   ${resumenAm(id)}
   ${cuch?`<p class="small muted" style="margin-top:12px">Tenés ${cuch} cuchara${cuch===1?"":"s"} de madera. Que no sume otra este año.</p>`:""}`;
 }
+/* tarjeta de una marca: número, diferencia con el par y cómo se compuso la vuelta */
+function marcaVuelta(titulo,valor,v,dif){
+  const c={ea:0,bi:0,pa:0,bo:0,db:0};
+  v.g.forEach((g,h)=>c[tipoHoyo(g,v.c.par[h])]++);
+  const chip=(n,txt,cls)=>n?`<span class="hchip ${cls}">${n} ${txt}</span>`:"";
+  return `<div class="mark"><div class="lb">${titulo}</div>
+    <div class="big">${valor} <span class="dif ${dif<0?"bajo":""}">${dif===0?"E":(dif>0?"+":"")+dif}</span></div>
+    <div class="ctx">${ctxLink(v.f)}</div>
+    <div class="hchips">${chip(c.ea,"águila"+(c.ea>1?"s":""),"c-ea")}${chip(c.bi,"birdie"+(c.bi>1?"s":""),"c-bi")}
+      ${chip(c.pa,"par"+(c.pa>1?"es":""),"c-pa")}${chip(c.bo,"bogey"+(c.bo>1?"s":""),"c-bo")}${chip(c.db,"doble o peor","c-db")}</div></div>`;
+}
 V.inicio = vistaPerfil;
 V.ryderhist = () => V.ryder();
+
+/* los eventos de Ryder jugados, para el perfil */
+function resumenRyder(id){
+  const L=S.eventos||[];
+  const mios=L.filter(e=>e.matches&&e.matches.length);
+  if(!mios.length) return "";
+  const t=mios.reduce((a,e)=>({g:a.g+e.ganados,p:a.p+e.perdidos,e:a.e+e.empatados,pts:a.pts+e.puntos}),{g:0,p:0,e:0,pts:0});
+  return `<h2>Ryder Cup</h2>
+  <div class="kpis kpi4"><div class="kpi"><div class="big">${mios.length}</div><div class="lb">copas jugadas</div></div>
+    <div class="kpi"><div class="big verde">${t.g}</div><div class="lb">partidos ganados</div></div>
+    <div class="kpi"><div class="big">${t.e}</div><div class="lb">empatados</div></div>
+    <div class="kpi"><div class="big">${fmt(t.pts)}</div><div class="lb">puntos aportados</div></div></div>
+  <div class="card pad" style="margin-top:10px"><ul class="rows">
+    ${mios.map(e=>`<li><div class="small"><b>${esc(e.nombre)}</b> · ${esc(e.cancha||"")}
+      <div class="muted">${e.ganados} ganados · ${e.empatados} empatados · ${e.perdidos} perdidos${e.equipo?` · ${e.equipo==="bags"?"Bags Boys":"Resto del Mundo"}`:""}</div></div>
+      <span class="r">${fmt(e.puntos)}<small>puntos</small></span></li>`).join("")}</ul></div>`;
+}
 
 /* ─── pintura general ─── */
 function pintar(){
@@ -2034,7 +2084,7 @@ function pintar_(){
   <div class="top"><img src="${LOGO.tour}" alt=""><div class="t">Chaqueta Tour</div>
     ${tab==="vivo"?`<button class="icon" id="recargar">↻</button>`:""}<button class="icon" id="menu">☰</button></div>
   ${tab==="stats"?`<nav class="nav2">${NAVSTATS.map(([k,t])=>`<a href="#/${k}" class="${r===k||(k==="estadisticas"&&r==="records")?"on":""}">${t}</a>`).join("")}</nav>`:""}
-  ${tab==="vivo"&&admin?`<nav class="nav2">${[["vivo","En juego"],["armar","Armar"],["hcp","Handicaps"]].map(([k,t])=>`<a href="#/${k}" class="${r===k||(k==="vivo"&&r==="match")?"on":""}">${t}</a>`).join("")}</nav>`:""}
+  ${tab==="vivo"&&admin?`<nav class="nav2">${[["vivo","En juego"],["armar","Armar la Ryder"],["hcp","Handicaps"]].map(([k,t])=>`<a href="#/${k}" class="${r===k||(k==="vivo"&&r==="match")?"on":""}">${t}</a>`).join("")}</nav>`:""}
   ${pend?`<div class="pend">📴 ${pend} ${pend===1?"hoyo guardado en el teléfono":"hoyos guardados en el teléfono"}: se mandan solos al volver la señal · <button id="reintentar">Reintentar ahora</button></div>`:""}
   <main>${cuerpo}</main>
   <div class="tabs">
@@ -2077,7 +2127,7 @@ function ligarShell(tab,r,a){
 /* ligar() del módulo en vivo sin volver a dibujar la cáscara */
 function ligar(){
   const {r}=ruta();
-  if(r==="armar"){ ligarArmar(); return; }
+  if(r==="armar"){ ligarArmar(); ligarBorrarEv(); return; }
   if(r==="hcp"){ ligarHcp(); return; }
   document.querySelectorAll(".mrow[data-m]").forEach(row=>row.onclick=()=>{
     S.match=row.dataset.m; const m=S.est.matches.find(x=>x.match_id===S.match);
@@ -2098,6 +2148,16 @@ function ligar(){
       b.disabled=false; pintar(); return; }
     S.err=""; await refrescar(true);
   });
+  const be=document.getElementById("borrarEv");
+  if(be) be.onclick=async()=>{
+    const ev=(S.est&&S.est.evento)?S.est.evento:(A.evento?{evento_id:A.evento.evento_id,nombre:A.evento.nombre}:null);
+    if(!ev) return;
+    if(!confirm(`¿Borrar "${ev.nombre}" con todos sus cruces y golpes? No se puede deshacer.`)) return;
+    be.disabled=true; be.textContent="Borrando…";
+    const x=await api("borrarEvento",{token:tok(),evento_id:ev.evento_id},"POST");
+    if(!x.ok){ S.err=x.error; be.disabled=false; pintar(); return; }
+    A.evento=null; A.sesiones=[]; S.err=""; location.hash="#/armar"; await refrescar(true);
+  };
   const ce=document.getElementById("cerrarEv");
   if(ce) ce.onclick=async()=>{
     if(!confirm("¿Cerrar el evento? Queda guardado y deja de aparecer en vivo.")) return;
@@ -2106,6 +2166,19 @@ function ligar(){
     if(!x.ok){ S.err=x.error; ce.disabled=false; pintar(); return; }
     alert("Evento cerrado: "+x.marcador.bags+" a "+x.marcador.resto+" · "+x.ganador);
     A.evento=null; A.sesiones=[]; await refrescar(true);
+  };
+}
+function ligarBorrarEv(){
+  const be=document.getElementById("borrarEv");
+  if(!be) return;
+  be.onclick=async()=>{
+    const ev=A.evento||((S.est&&S.est.evento)?{evento_id:S.est.evento.evento_id,nombre:S.est.evento.nombre}:null);
+    if(!ev) return;
+    if(!confirm(`¿Borrar "${ev.nombre}" con todos sus cruces y golpes? No se puede deshacer.`)) return;
+    be.disabled=true; be.textContent="Borrando…";
+    const x=await api("borrarEvento",{token:tok(),evento_id:ev.evento_id},"POST");
+    if(!x.ok){ S.err=x.error; be.disabled=false; pintar(); return; }
+    A.evento=null; A.sesiones=[]; S.err=""; await refrescar(true);
   };
 }
 function ligarHcp(){
@@ -2137,6 +2210,7 @@ async function arrancar(){
   pintar();
   cargarHistorico();
   traerAmistosos();
+  api("misEventos",{jugador_id:S.ses.jugador.id}).then(r=>{ if(r&&r.ok){ S.eventos=r.eventos; pintar(); } });
   const c=await api("catalogo"); if(c && c.ok) S.cat=c;
   const p=await api("pinActivo"); S.pin=!!(p&&p.pin);
   await refrescar(true);
