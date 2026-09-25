@@ -561,6 +561,7 @@ h3.bagsc{color:var(--bags)}h3.restoc{color:var(--resto)}
 .av.inv{background:var(--ink3);color:#fff}
 .pend{background:var(--goldbg);color:var(--gold);font-size:12.5px;font-weight:600;padding:8px 14px;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
 .pend button{background:none;border:1px solid currentColor;color:inherit;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.diag{text-align:left;white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.4;background:var(--soft);border-radius:10px;padding:10px;margin-top:10px;max-height:240px;overflow:auto}
 .load{padding:40px 10px;text-align:center;color:var(--ink3);font-size:13.5px}
 .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--goldbg);color:var(--gold)}
 
@@ -1269,16 +1270,32 @@ function sesionVencida(r){
   return false;
 }
 async function api(accion, datos={}, metodo="GET"){
+  let r=null, txt="";
   try{
     if(metodo==="GET"){
       const q=new URLSearchParams(Object.assign({accion},datos)).toString();
-      const r=await fetch(API+"?"+q,{cache:"no-store"});
-      const j=await r.json(); sesionVencida(j); return j;
+      r=await fetch(API+"?"+q,{cache:"no-store",redirect:"follow"});
+    } else {
+      r=await fetch(API,{method:"POST",redirect:"follow",body:JSON.stringify(Object.assign({accion},datos)),
+        headers:{"Content-Type":"text/plain;charset=utf-8"}});
     }
-    const r=await fetch(API,{method:"POST",body:JSON.stringify(Object.assign({accion},datos)),
-      headers:{"Content-Type":"text/plain;charset=utf-8"}});
-    const j=await r.json(); sesionVencida(j); return j;
-  }catch(e){ return {ok:false,error:"Sin conexión con el servidor"}; }
+    txt=await r.text();
+  }catch(e){
+    S.diag=`No se pudo contactar al servidor (${e.message}). Suele ser falta de señal o la dirección del script mal publicada.`;
+    return {ok:false,error:"Sin conexión con el servidor"};
+  }
+  try{
+    const j=JSON.parse(txt); sesionVencida(j);
+    if(!j.ok) S.diag=`El servidor respondió: ${j.error||"error sin detalle"}`;
+    return j;
+  }catch(e){
+    /* respondió algo que no es JSON: casi siempre una pantalla de Google (permisos) o un error del script */
+    const pista = /accounts\.google\.com|Iniciar sesión|Sign in/i.test(txt) ? "La implementación pide iniciar sesión: en 'Quién tiene acceso' tiene que decir Cualquier usuario."
+      : /Se ha producido un error|Error encountered|TypeError|ReferenceError/i.test(txt) ? "El script tiró un error al ejecutarse."
+      : "El servidor respondió algo que no es JSON.";
+    S.diag = `${pista} (HTTP ${r?r.status:"?"})\n\n${txt.replace(/<[^>]+>/g," ").replace(/\s+/g," ").slice(0,300)}`;
+    return {ok:false,error:"El servidor respondió algo inesperado"};
+  }
 }
 const tok = () => S.ses ? S.ses.token : "";
 function guardar(){ try{ localStorage.setItem("ct-ses",JSON.stringify(S.ses)); }catch(e){} }
@@ -1306,9 +1323,13 @@ function vistaLogin(){
     <div class="tt">Chaqueta Tour</div><div class="st">EL TOUR EN TU BOLSILLO</div>
     ${L.paso===1?p1:p2}
     <div class="err">${esc(S.err)}</div>
+    ${S.err?`<button class="volver" id="verDiag">Ver detalle técnico</button>`:""}
+    ${S.diagVisible?`<pre class="diag">${esc(S.diag||"Sin detalle")}</pre>`:""}
   </div></div>`;
 }
 function ligarLogin(){
+  const vd=document.getElementById("verDiag");
+  if(vd) vd.onclick=()=>{ S.diagVisible=!S.diagVisible; pintar(); };
   if(L.paso===1){
     const i=document.getElementById("mat");
     const ir=async()=>{ L.matricula=i.value.trim(); if(!L.matricula) return;
