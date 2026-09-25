@@ -676,7 +676,7 @@ function modelar(S){
 }
 
 /* ── ayudas ── */
-const nom = id => DB.jug.get(id)?.tour || ("#"+id);
+const nom = id => (DB&&DB.jug.get(+id)?.tour) || ("#"+id);
 const canNom = cid => { const c=DB.can.get(cid); return c ? c.nombre+(c.rec?` ${c.rec}`:"") : "—"; };
 const fmt = v => v==null ? "—" : (Math.round(v*10)/10).toLocaleString("es-AR",{maximumFractionDigits:1});
 const sgn = v => v==null ? "—" : v===0 ? "E" : (v>0?"+":"")+fmt(v);
@@ -690,12 +690,13 @@ const parF = f => DB.can.get(f.cid)?.parT ?? 72;
 const ultima = () => [...DB.jugadas].sort((a,b)=>b.t-a.t||b.n-a.n)[0];
 const MEJ_GROSS = 5;
 
-function equipo(id){ if(!DB._eq){ DB._eq={}; const tmax=Math.max(0,...DB.eq.map(e=>e.t||0));
+function equipo(id){ if(!DB) return null; if(!DB._eq){ DB._eq={}; const tmax=Math.max(0,...DB.eq.map(e=>e.t||0));
     DB.eq.filter(e=>e.t===tmax).forEach(e=>DB._eq[e.jid]=e.eq.toUpperCase().startsWith("BAGS")?"bag":"resto"); } return DB._eq[id]||null; }
 const EQNOM={bag:"Bags Boys",resto:"Resto del Mundo"};
 const AVC=["#0A1F3D","#1D4ED8","#0F7B4F","#8B2E4F","#7C4D12","#3D3A8C","#0E6E73","#9A3412","#374151","#5B2C83","#1F6F43","#A16207"];
 function av(id,cls="",star=false){
-  const j=DB.jug.get(id); const s=(j?.tour||"?").split(" "); const ini=(s[0][0]+(s[1]?s[1][0]:"")).toUpperCase();
+  if(!DB) return `<span class="av ${cls} ini">·</span>`;
+  const j=DB.jug.get(+id); const s=(j?.tour||"?").split(" "); const ini=(s[0][0]+(s[1]?s[1][0]:"")).toUpperCase();
   const e=equipo(id); const bd=e?`<img class="bd" src="${LOGO[e]}" alt="">`:"";
   const st=(star&&titulos()[id])?`<span class="star" title="Campeón del Tour">★</span>`:"";
   const inner=FOTOS[id]?`<img class="ph" src="${FOTOS[id]}" alt="">`:ini;
@@ -728,6 +729,7 @@ function tabla(t){
   return {fs,filas,m,ffin};
 }
 function vueltas(){
+  if(!DB) return [];
   if(DB._v) return DB._v;
   const V=[];
   DB.res.forEach(r=>{ if(r.est!=="JUGO") return; const g=DB.tar.get(r.fid+"|"+r.jid); if(!g||g.some(x=>x==null)) return;
@@ -736,8 +738,8 @@ function vueltas(){
 }
 function tipoHoyo(g,p){ if(g==null) return "nd"; const d=g-p; return d<=-2?"ea":d===-1?"bi":d===0?"pa":d===1?"bo":"db"; }
 function ganadores(){ if(DB._w) return DB._w; const w=[]; DB.jugadas.forEach(f=>{ leaderboard(f.fid).filter(r=>r.pos===1).forEach(r=>w.push({f,r})); }); return DB._w=w; }
-function campeones(){ if(DB._c) return DB._c; return DB._c=DB.temporadas.map(t=>{ const T=tabla(t); return {t,T,top:T.filas.slice(0,3)}; }); }
-function titulos(){ if(DB._t) return DB._t; const m={}; campeones().forEach(c=>c.top.filter(x=>x.pos===1).forEach(x=>m[x.jid]=(m[x.jid]||0)+1)); return DB._t=m; }
+function campeones(){ if(!DB) return []; if(DB._c) return DB._c; return DB._c=DB.temporadas.map(t=>{ const T=tabla(t); return {t,T,top:T.filas.slice(0,3)}; }); }
+function titulos(){ if(!DB) return {}; if(DB._t) return DB._t; const m={}; campeones().forEach(c=>c.top.filter(x=>x.pos===1).forEach(x=>m[x.jid]=(m[x.jid]||0)+1)); return DB._t=m; }
 const cuenta = arr => { const m={}; arr.forEach(k=>m[k]=(m[k]||0)+1); return Object.entries(m).map(([k,v])=>[+k,v]).sort((a,b)=>b[1]-a[1]||nom(a[0]).localeCompare(nom(b[0]))); };
 function fechasGanadas(jid,t){ return ganadores().filter(x=>x.r.jid===jid&&(!t||x.f.t===t)).length; }
 
@@ -1291,7 +1293,7 @@ async function probarURL(u){
 }
 /* camino alternativo: trae la respuesta con una etiqueta <script>, que ningún navegador bloquea */
 let _cbN=0;
-function jsonp(accion,datos={},ms=20000){
+function jsonp(accion,datos={},ms=12000){
   return new Promise(res=>{
     const cb="ctcb"+(++_cbN)+"_"+Date.now();
     const q=new URLSearchParams(Object.assign({accion,callback:cb},datos)).toString();
@@ -2007,6 +2009,16 @@ V.ryderhist = () => V.ryder();
 
 /* ─── pintura general ─── */
 function pintar(){
+  try{ pintar_(); }
+  catch(e){
+    console.error(e);
+    app().innerHTML=`<div style="padding:24px"><h1>Algo se rompió al dibujar la pantalla</h1>
+      <p class="lead">${esc(e.message)}</p>
+      <button class="btn" onclick="location.reload()">Recargar</button>
+      <button class="btn sec" onclick="localStorage.clear();location.reload()">Salir y empezar de nuevo</button></div>`;
+  }
+}
+function pintar_(){
   if(!S.ses){ app().innerHTML=vistaLogin(); ligarLogin(); return; }
   const {r,a}=ruta(), tab=TABDE(r), j=S.ses.jugador, admin=j.rol==="admin";
   let cuerpo="";
@@ -2032,7 +2044,7 @@ function pintar(){
     <button data-go="#/estadisticas" class="${tab==="stats"?"on":""}"><b>📊</b>Estadísticas</button>
   </div>
   <div class="drawer" id="drawer"><div class="dpanel">
-    <div class="dhead">${av(+j.id,"lg",true)}<div><b>${esc(j.nombre)}</b><div class="small" style="color:var(--gold)">${admin?"ADMINISTRADOR":"JUGADOR"}</div></div></div>
+    <div class="dhead">${DB?av(+j.id,"lg",true):`<span class="av lg ini">${esc((j.nombre||"?")[0])}</span>`}<div><b>${esc(j.nombre)}</b><div class="small" style="color:var(--gold)">${admin?"ADMINISTRADOR":"JUGADOR"}</div></div></div>
     <a href="#/jugador/${j.id}">🏌 Mi ficha completa</a>
     <button id="tema">◐ Modo claro / oscuro</button>
     ${S.pin?`<button id="cpin">🔒 Cambiar mi PIN</button>`:""}
