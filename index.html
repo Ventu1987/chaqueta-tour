@@ -1392,7 +1392,7 @@ async function probarURL(u){
 }
 /* camino alternativo: trae la respuesta con una etiqueta <script>, que ningún navegador bloquea */
 let _cbN=0;
-function jsonp(accion,datos={},ms=12000){
+function jsonp(accion,datos={},ms=60000){
   return new Promise(res=>{
     const cb="ctcb"+(++_cbN)+"_"+Date.now();
     const q=new URLSearchParams(Object.assign({accion,callback:cb},datos)).toString();
@@ -1411,7 +1411,7 @@ async function api(accion, datos={}, metodo="GET"){
   try{
     if(metodo==="GET"){
       const q=new URLSearchParams(Object.assign({accion},datos)).toString();
-      r=await fetch(apiURL()+"?"+q,{cache:"no-store",redirect:"follow"});
+      r=await fetch(apiURL()+"?"+q,{cache:"no-store",redirect:"follow",signal:AbortSignal.timeout?AbortSignal.timeout(60000):undefined});
     } else {
       r=await fetch(apiURL(),{method:"POST",redirect:"follow",body:JSON.stringify(Object.assign({accion},datos)),
         headers:{"Content-Type":"text/plain;charset=utf-8"}});
