@@ -586,6 +586,19 @@ h3.bagsc{color:var(--bags)}h3.restoc{color:var(--resto)}
 .segs button{flex:none;font:inherit;font-size:13.5px;font-weight:600;padding:9px 15px;border-radius:999px;
   background:var(--card);border:1px solid var(--line);color:var(--ink2);cursor:pointer}
 .segs button.on{background:var(--gold);border-color:var(--gold);color:#0A1F3D}
+
+/* lista de eventos */
+.ev{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;margin-top:10px;box-shadow:var(--shadow)}
+.ev.en_juego{box-shadow:inset 0 0 0 2px var(--gold),var(--shadow)}
+.ev.cerrado{opacity:.75}
+.evtop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.evtop b{font-family:var(--cond);font-weight:700;font-size:20px}
+.chipev{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--ink2);white-space:nowrap}
+.chipev.en_juego{background:var(--goldbg);color:var(--gold)}
+.chipev.borrador{background:var(--soft);color:var(--ink3)}
+.chipev.cerrado{background:rgba(76,201,142,.15);color:var(--green)}
+.evacc{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.evacc .btn{width:auto;margin:0;padding:9px 13px;font-size:13px}
 .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--goldbg);color:var(--gold)}
 
 /* ajustes propios del módulo en vivo, sin pisar al histórico */
@@ -1507,28 +1520,52 @@ function ligarLogin(){
 }
 
 /* ═══ ARMADO (admin) ═══ */
-let A = {evento:null, cancha:"", nombre:"", hcp_modo:"DIFERENCIA", sesiones:[], sel:{bags:[],resto:[]}, sesionAct:0};
+let A = {eventos:null, nuevo:false, evento:null, hcp_modo:"DIFERENCIA", sesiones:[], sel:{bags:[],resto:[]}, sesionAct:0, hora:"09:00"};
+const ESTEV={BORRADOR:"Borrador",EN_JUEGO:"En juego",CERRADO:"Terminado"};
 function vistaArmar(){
   if(!S.cat) return `<div class="load">Cargando datos…</div>`;
-  if(!A.evento){
-    const hoy=new Date().toISOString().slice(0,10);
-    return `<h1>Armar la Ryder</h1><p class="lead">Todo en una pantalla: creás el evento, le agregás las sesiones y dentro de cada una los cruces. Podés borrarlo entero en cualquier momento.</p>
-    <div class="card"><div class="paso"><b>1</b> El evento</div>
-      <label class="f">Nombre</label><input type="text" id="an" value="Ryder Cup ${new Date().getFullYear()}">
-      <div class="row2"><div><label class="f">Cancha</label>
-        <select id="ac">${S.cat.canchas.map(c=>`<option value="${c.id}">${esc(c.nombre)}${c.recorrido?" · "+esc(c.recorrido):""}</option>`).join("")}</select></div>
-        <div><label class="f">Día</label><input type="date" id="ad" value="${hoy}"></div></div>
-      <label class="f">Golpes en el match</label>
-      <select id="ah"><option value="DIFERENCIA">Por diferencia de handicap</option><option value="COMPLETO">Cada uno con su handicap completo</option></select>
-      <div class="row2"><div><label class="f">Puntos al ganador</label><input type="text" id="ap" value="1"></div>
-        <div><label class="f">Si empatan</label><input type="text" id="ae" value="0.5"></div></div>
-      <button class="btn" id="crear">Crear el evento →</button>
-      <div class="err">${esc(S.err)}</div></div>`;
-  }
-  const usados=new Set(); A.sesiones.forEach(s=>s.matches.forEach(m=>m.bags.concat(m.resto).forEach(j=>usados.add(String(j)))));
+  if(A.nuevo) return vistaNuevoEvento();
+  if(A.evento) return vistaEditarEvento();
+  if(A.eventos===null) return `<div class="load">Buscando los eventos…</div>`;
+  const ficha=e=>`<div class="ev ${e.estado.toLowerCase()}">
+    <div class="evtop"><div><b>${esc(e.nombre)}</b><div class="small muted">${esc(e.cancha||"")}${e.dia?` · ${esc(String(e.dia).slice(0,10))}`:""}</div></div>
+      <span class="chipev ${e.estado.toLowerCase()}">${ESTEV[e.estado]||e.estado}</span></div>
+    <div class="small muted">${e.sesiones} sesion${e.sesiones===1?"":"es"} · ${e.cruces} cruce${e.cruces===1?"":"s"}</div>
+    <div class="evacc">
+      <button class="btn sec" data-abrir="${e.evento_id}">${e.estado==="CERRADO"?"Ver":"Abrir y editar"}</button>
+      ${e.estado==="BORRADOR"&&e.cruces?`<button class="btn" data-empezar="${e.evento_id}">Empezar ▶</button>`:""}
+      ${e.estado==="EN_JUEGO"?`<button class="btn" data-ver="${e.evento_id}">Ir al juego en vivo</button>`:""}
+      <button class="btn sec" data-borrarev="${e.evento_id}" style="color:var(--red)">🗑 Borrar</button>
+    </div></div>`;
+  return `<h1>Ryder Cup</h1>
+  <p class="lead">Acá están todos los eventos, con lo que tiene cargado cada uno. Podés seguir armando un borrador, empezarlo, verlo en vivo o borrarlo.</p>
+  <button class="btn" id="nuevoEv">+ Crear un evento nuevo</button>
+  ${A.eventos.length?A.eventos.map(ficha).join(""):`<div class="aviso" style="margin-top:12px">Todavía no hay ningún evento creado.</div>`}
+  <div class="err">${esc(S.err)}</div>`;
+}
+function vistaNuevoEvento(){
+  const hoy=new Date().toISOString().slice(0,10);
+  return `<button class="btn volver-vivo" id="volverEv">← Volver</button>
+  <h1>Nuevo evento</h1><p class="lead">Después le agregás las sesiones y los cruces.</p>
+  <div class="card">
+    <label class="f">Nombre</label><input type="text" id="an" value="Ryder Cup ${new Date().getFullYear()}">
+    <div class="row2"><div><label class="f">Cancha</label>
+      <select id="ac">${S.cat.canchas.map(c=>`<option value="${c.id}">${esc(c.nombre)}${c.recorrido?" · "+esc(c.recorrido):""}</option>`).join("")}</select></div>
+      <div><label class="f">Día</label><input type="date" id="ad" value="${hoy}"></div></div>
+    <label class="f">Golpes en el match</label>
+    <select id="ah"><option value="DIFERENCIA">Por diferencia de handicap</option><option value="COMPLETO">Cada uno con su handicap completo</option></select>
+    <div class="row2"><div><label class="f">Puntos al ganador</label><input type="text" id="ap" value="1"></div>
+      <div><label class="f">Si empatan</label><input type="text" id="ae" value="0.5"></div></div>
+    <button class="btn" id="crear">Crear y seguir armando →</button>
+    <div class="err">${esc(S.err)}</div></div>`;
+}
+function vistaEditarEvento(){
   const total=A.sesiones.reduce((a,s)=>a+s.matches.length,0);
-  return `<h1>${esc(A.evento.nombre)}</h1>
-  <p class="lead">${esc(A.evento.canchaNombre)} · golpes ${A.evento.hcp_modo==="DIFERENCIA"?"por diferencia":"completos"} · ${total} cruce${total===1?"":"s"} armado${total===1?"":"s"}</p>
+  const cerrado=A.evento.estado==="CERRADO";
+  return `<button class="btn volver-vivo" id="volverEv">← Todos los eventos</button>
+  <h1>${esc(A.evento.nombre)}</h1>
+  <p class="lead">${esc(A.evento.canchaNombre||"")} · golpes ${A.evento.hcp_modo==="DIFERENCIA"?"por diferencia":"completos"} · ${total} cruce${total===1?"":"s"}
+  <span class="chipev ${(A.evento.estado||"BORRADOR").toLowerCase()}">${ESTEV[A.evento.estado]||"Borrador"}</span></p>
   ${A.sesiones.map((s,i)=>`<div class="card ses">
     <div class="shead"><div><b>${esc(s.nombre)}</b><span class="pill">${FORMATOS[s.formato]}</span></div><span class="muted small">${s.matches.length} cruce${s.matches.length===1?"":"s"}</span></div>
     ${s.matches.length?s.matches.map((m,k)=>`<div class="cruce">
@@ -1536,17 +1573,20 @@ function vistaArmar(){
         <div class="c1">${m.bags.map(j=>`${avatar(j)}<span>${esc(nom(j))}</span>`).join("")}</div>
         <span class="vs">${esc(m.hora||"—")}</span>
         <div class="c2">${m.resto.map(j=>`<span>${esc(nom(j))}</span>${avatar(j)}`).join("")}</div>
-        <button class="x" data-borrar="${m.match_id}" data-s="${i}" title="Borrar">✕</button></div>`).join("")
+        ${cerrado?"":`<button class="x" data-borrar="${m.match_id}" data-s="${i}" title="Borrar">✕</button>`}</div>`).join("")
       :`<p class="small muted" style="margin:6px 0">Todavía sin cruces.</p>`}
-    <div class="row2" style="margin-top:10px">
+    ${cerrado?"":`<div class="row2" style="margin-top:10px">
       <button class="btn sec" data-ses="${i}">+ Agregar cruce</button>
-      <button class="btn sec" data-auto="${i}">⚡ Armar por handicap</button></div></div>`).join("")}
-  <div class="card"><div class="paso"><b>2</b> Agregar una sesión</div>
+      <button class="btn sec" data-auto="${i}">⚡ Armar por handicap</button></div>`}</div>`).join("")}
+  ${cerrado?"":`<div class="card"><div class="paso"><b>+</b> Agregar una sesión</div>
     <div class="row2"><div><label class="f">Nombre</label><input type="text" id="sn" placeholder="Ej: Fourball de la mañana"></div>
       <div><label class="f">Formato</label><select id="sf">${Object.entries(FORMATOS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select></div></div>
-    <button class="btn sec" id="addses">Agregar sesión</button></div>
-  ${total?`<button class="btn" id="activar">Empezar el evento ▶</button>`:`<div class="aviso">Agregá al menos un cruce para poder empezar.</div>`}
-  <button class="btn sec" id="borrarEv" style="margin-top:8px;color:var(--red)">Borrar este evento y todo lo cargado</button>
+    <button class="btn sec" id="addses">Agregar sesión</button></div>`}
+  <div class="accs">
+    ${(!cerrado&&A.evento.estado!=="EN_JUEGO"&&total)?`<button class="btn" id="activar">Empezar el evento ▶</button>`:""}
+    ${A.evento.estado==="EN_JUEGO"?`<button class="btn" id="irVivo">Ir al juego en vivo</button>`:""}
+    <button class="btn sec" id="borrarEv" style="color:var(--red)">🗑 Borrar este evento</button>
+  </div>
   <div class="err">${esc(S.err)}</div>`;
 }
 function vistaCruce(){
@@ -1667,44 +1707,39 @@ function vistaMatch(){
 /* ═══ armado: enlaces ═══ */
 function ligarArmar(){
   if(!S.cat) return;
-  if(A.cruce){
-    document.querySelectorAll(".jchip").forEach(b=>b.onclick=()=>{
-      const l=b.dataset.l, j=b.dataset.j, cupo=A.sesiones[A.sesionAct].formato==="SINGLES"?1:2;
-      const arr=A.sel[l], i=arr.indexOf(j);
-      if(i>=0) arr.splice(i,1); else { if(arr.length>=cupo) arr.shift(); arr.push(j); }
-      pintar();
-    });
-    document.getElementById("cancelarM").onclick=()=>{ A.cruce=false; A.sel={bags:[],resto:[]}; S.err=""; pintar(); };
-    const hh=document.getElementById("hh"); if(hh) hh.onchange=()=>{ A.hora=hh.value; };
-    const g=document.getElementById("guardarM");
-    if(g) g.onclick=async()=>{
-      const s=A.sesiones[A.sesionAct], hora=document.getElementById("hh").value;
-      g.disabled=true; g.textContent="Guardando…";
-      const r=await api("crearMatch",{token:tok(),sesion_id:s.sesion_id,nro:s.matches.length+1,
-        bags_1:A.sel.bags[0]||"",bags_2:A.sel.bags[1]||"",resto_1:A.sel.resto[0]||"",resto_2:A.sel.resto[1]||"",hora},"POST");
-      if(!r.ok){ S.err=r.error; g.disabled=false; pintar(); return; }
-      s.matches.push({match_id:r.match_id,bags:A.sel.bags.slice(),resto:A.sel.resto.slice(),hora});
-      A.hora=hora; A.cruce=false; A.sel={bags:[],resto:[]}; S.err=""; pintar();
-    };
-    return;
-  }
-  if(!A.evento){
-    const c=document.getElementById("crear");
-    if(c) c.onclick=async()=>{
-      const nombre=document.getElementById("an").value.trim();
-      const cid=document.getElementById("ac").value;
-      c.disabled=true; c.textContent="Creando…";
-      const r=await api("crearEvento",{token:tok(),temporada:new Date().getFullYear(),tipo:"RYDER",nombre,
-        dia:document.getElementById("ad").value,cancha_id:cid,hcp_modo:document.getElementById("ah").value,
-        pts_gana:document.getElementById("ap").value,pts_empata:document.getElementById("ae").value},"POST");
-      if(!r.ok){ S.err=r.error; c.disabled=false; pintar(); return; }
-      const can=S.cat.canchas.find(x=>String(x.id)===String(cid))||{};
-      A.evento={evento_id:r.evento_id,nombre,hcp_modo:document.getElementById("ah").value,
-        canchaNombre:can.nombre+(can.recorrido?" "+can.recorrido:"")};
-      A.sesiones=[]; S.err=""; pintar();
-    };
-    return;
-  }
+  if(A.eventos===null && !A.evento && !A.nuevo) traerEventos();
+  if(A.cruce){ ligarCruce(); return; }
+  const nv=document.getElementById("nuevoEv");
+  if(nv) nv.onclick=()=>{ A.nuevo=true; S.err=""; pintar(); };
+  const vv=document.getElementById("volverEv");
+  if(vv) vv.onclick=()=>{ A.nuevo=false; A.evento=null; A.sesiones=[]; S.err=""; traerEventos(); };
+  document.querySelectorAll("[data-abrir]").forEach(b=>b.onclick=()=>abrirEvento(b.dataset.abrir));
+  document.querySelectorAll("[data-ver]").forEach(b=>b.onclick=()=>{ location.hash="#/vivo"; });
+  const iv=document.getElementById("irVivo"); if(iv) iv.onclick=()=>{ location.hash="#/vivo"; };
+  document.querySelectorAll("[data-empezar]").forEach(b=>b.onclick=async()=>{
+    b.disabled=true; b.textContent="Empezando…";
+    const r=await api("estadoEvento",{token:tok(),evento_id:b.dataset.empezar,estado:"EN_JUEGO"},"POST");
+    if(!r.ok){ S.err=r.error; pintar(); return; }
+    await refrescar(true); location.hash="#/vivo";
+  });
+  document.querySelectorAll("[data-borrarev]").forEach(b=>b.onclick=async()=>{
+    const ev=(A.eventos||[]).find(e=>e.evento_id===b.dataset.borrarev)||{nombre:"este evento"};
+    if(!confirm(`¿Borrar "${ev.nombre}" con todos sus cruces y golpes? No se puede deshacer.`)) return;
+    b.disabled=true; b.textContent="Borrando…";
+    const r=await api("borrarEvento",{token:tok(),evento_id:b.dataset.borrarev},"POST");
+    if(!r.ok){ S.err=r.error; pintar(); return; }
+    A.evento=null; A.sesiones=[]; await traerEventos(); refrescar(true);
+  });
+  const c=document.getElementById("crear");
+  if(c) c.onclick=async()=>{
+    const nombre=document.getElementById("an").value.trim(), cid=document.getElementById("ac").value;
+    c.disabled=true; c.textContent="Creando…";
+    const r=await api("crearEvento",{token:tok(),temporada:new Date().getFullYear(),tipo:"RYDER",nombre,
+      dia:document.getElementById("ad").value,cancha_id:cid,hcp_modo:document.getElementById("ah").value,
+      pts_gana:document.getElementById("ap").value,pts_empata:document.getElementById("ae").value},"POST");
+    if(!r.ok){ S.err=r.error; c.disabled=false; pintar(); return; }
+    A.nuevo=false; await abrirEvento(r.evento_id);
+  };
   const a=document.getElementById("addses");
   if(a) a.onclick=async()=>{
     const nombre=document.getElementById("sn").value.trim()||("Sesión "+(A.sesiones.length+1));
@@ -1720,37 +1755,69 @@ function ligarArmar(){
     if(!r.ok){ S.err=r.error; pintar(); return; }
     const s=A.sesiones[+b.dataset.s]; s.matches=s.matches.filter(x=>x.match_id!==b.dataset.borrar); pintar();
   });
-  document.querySelectorAll("[data-auto]").forEach(b=>b.onclick=async()=>{
-    const i=+b.dataset.auto, s=A.sesiones[i], cupo=s.formato==="SINGLES"?1:2;
-    const usados=new Set(); A.sesiones.forEach(x=>x.matches.forEach(m=>m.bags.concat(m.resto).forEach(j=>usados.add(String(j)))));
-    const hcp=S.cat.hcp||{};
-    const libres=l=>S.cat.jugadores.filter(j=>eqDe(j.id)===l&&!usados.has(String(j.id)))
-      .sort((a,c)=>(hcp[String(a.id)]??99)-(hcp[String(c.id)]??99)).map(j=>String(j.id));
-    const B=libres("bag"), Rr=libres("resto");
-    const n=Math.floor(Math.min(B.length,Rr.length)/cupo);
-    if(!n){ S.err="No quedan jugadores libres para armar más cruces"; pintar(); return; }
-    const hora=prompt("Hora de salida del primer cruce (HH:MM)","09:00")||"09:00";
-    if(!confirm(`Se van a armar ${n} cruces enfrentando por handicap, cada 10 minutos. ¿Seguimos?`)) return;
-    b.disabled=true; b.textContent="Armando…";
-    const [hh,mm]=hora.split(":").map(Number);
-    for(let k=0;k<n;k++){
-      const bg=B.slice(k*cupo,k*cupo+cupo), rs=Rr.slice(k*cupo,k*cupo+cupo);
-      const t=new Date(2000,0,1,hh,(mm||0)+k*10);
-      const h=String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0");
-      const r=await api("crearMatch",{token:tok(),sesion_id:s.sesion_id,nro:s.matches.length+1,
-        bags_1:bg[0]||"",bags_2:bg[1]||"",resto_1:rs[0]||"",resto_2:rs[1]||"",hora:h},"POST");
-      if(!r.ok){ S.err=r.error; break; }
-      s.matches.push({match_id:r.match_id,bags:bg,resto:rs,hora:h});
-    }
-    pintar();
-  });
+  document.querySelectorAll("[data-auto]").forEach(b=>b.onclick=()=>armarAuto(+b.dataset.auto,b));
   document.querySelectorAll("[data-ses]").forEach(b=>b.onclick=()=>{ A.sesionAct=+b.dataset.ses; A.cruce=true; A.sel={bags:[],resto:[]}; pintar(); });
   const act=document.getElementById("activar");
   if(act) act.onclick=async()=>{
     act.disabled=true; act.textContent="Empezando…";
     const r=await api("estadoEvento",{token:tok(),evento_id:A.evento.evento_id,estado:"EN_JUEGO"},"POST");
     if(!r.ok){ S.err=r.error; act.disabled=false; pintar(); return; }
-    S.tab="vivo"; await refrescar(true);
+    A.evento.estado="EN_JUEGO"; await refrescar(true); location.hash="#/vivo";
+  };
+}
+async function traerEventos(){
+  const r=await api("eventos",{token:tok()});
+  A.eventos = (r&&r.ok) ? r.eventos : [];
+  pintar();
+}
+async function abrirEvento(id){
+  S.err=""; A.eventos=A.eventos||[];
+  const r=await api("abrirEvento",{token:tok(),evento_id:id});
+  if(!r.ok){ S.err=r.error; pintar(); return; }
+  A.evento=r.evento; A.sesiones=r.sesiones; A.nuevo=false; pintar();
+}
+async function armarAuto(i,b){
+  const s=A.sesiones[i], cupo=s.formato==="SINGLES"?1:2;
+  const usados=new Set(); A.sesiones.forEach(x=>x.matches.forEach(m=>m.bags.concat(m.resto).forEach(j=>usados.add(String(j)))));
+  const hcp=S.cat.hcp||{};
+  const libres=l=>S.cat.jugadores.filter(j=>eqDe(j.id)===l&&!usados.has(String(j.id)))
+    .sort((a,c)=>(hcp[String(a.id)]??99)-(hcp[String(c.id)]??99)).map(j=>String(j.id));
+  const B=libres("bag"), Rr=libres("resto");
+  const n=Math.floor(Math.min(B.length,Rr.length)/cupo);
+  if(!n){ S.err="No quedan jugadores libres para armar más cruces"; pintar(); return; }
+  const hora=prompt("Hora de salida del primer cruce (HH:MM)","09:00")||"09:00";
+  if(!confirm(`Se van a armar ${n} cruces enfrentando por handicap, cada 10 minutos. ¿Seguimos?`)) return;
+  b.disabled=true; b.textContent="Armando…";
+  const [hh,mm]=hora.split(":").map(Number);
+  for(let k=0;k<n;k++){
+    const bg=B.slice(k*cupo,k*cupo+cupo), rs=Rr.slice(k*cupo,k*cupo+cupo);
+    const t=new Date(2000,0,1,hh,(mm||0)+k*10);
+    const h=String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0");
+    const r=await api("crearMatch",{token:tok(),sesion_id:s.sesion_id,nro:s.matches.length+1,
+      bags_1:bg[0]||"",bags_2:bg[1]||"",resto_1:rs[0]||"",resto_2:rs[1]||"",hora:h},"POST");
+    if(!r.ok){ S.err=r.error; break; }
+    s.matches.push({match_id:r.match_id,bags:bg,resto:rs,hora:h});
+  }
+  pintar();
+}
+function ligarCruce(){
+  document.querySelectorAll(".jchip").forEach(b=>b.onclick=()=>{
+    const l=b.dataset.l, j=b.dataset.j, cupo=A.sesiones[A.sesionAct].formato==="SINGLES"?1:2;
+    const arr=A.sel[l], i=arr.indexOf(j);
+    if(i>=0) arr.splice(i,1); else { if(arr.length>=cupo) arr.shift(); arr.push(j); }
+    pintar();
+  });
+  document.getElementById("cancelarM").onclick=()=>{ A.cruce=false; A.sel={bags:[],resto:[]}; S.err=""; pintar(); };
+  const hh=document.getElementById("hh"); if(hh) hh.onchange=()=>{ A.hora=hh.value; };
+  const g=document.getElementById("guardarM");
+  if(g) g.onclick=async()=>{
+    const s=A.sesiones[A.sesionAct], hora=document.getElementById("hh").value;
+    g.disabled=true; g.textContent="Guardando…";
+    const r=await api("crearMatch",{token:tok(),sesion_id:s.sesion_id,nro:s.matches.length+1,
+      bags_1:A.sel.bags[0]||"",bags_2:A.sel.bags[1]||"",resto_1:A.sel.resto[0]||"",resto_2:A.sel.resto[1]||"",hora},"POST");
+    if(!r.ok){ S.err=r.error; g.disabled=false; pintar(); return; }
+    s.matches.push({match_id:r.match_id,bags:A.sel.bags.slice(),resto:A.sel.resto.slice(),hora});
+    A.hora=hora; A.cruce=false; A.sel={bags:[],resto:[]}; S.err=""; pintar();
   };
 }
 
@@ -2311,7 +2378,7 @@ async function arrancar(){
   addEventListener("online",()=>{ if(S.ses) refrescar(true); });
   document.addEventListener("visibilitychange",()=>{ if(!document.hidden && S.ses) refrescar(true); });
 }
-addEventListener("hashchange",()=>{ S.match=null; if(TABDE(ruta().r)!=="amis"){ AM.act=null; AM.nueva=false; } pintar(); scrollTo(0,0); });
+addEventListener("hashchange",()=>{ S.match=null; if(ruta().r==="armar"){ A.eventos=null; A.evento=null; A.nuevo=false; A.cruce=false; } if(TABDE(ruta().r)!=="amis"){ AM.act=null; AM.nueva=false; } pintar(); scrollTo(0,0); });
 (function(){
   try{ const t=localStorage.getItem("ct-tema"); document.documentElement.setAttribute("data-theme",t||"dark"); }catch(e){ document.documentElement.setAttribute("data-theme","dark"); }
   recuperar();
