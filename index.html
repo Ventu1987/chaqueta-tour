@@ -400,6 +400,17 @@ td.med.o{color:#D4A017} td.med.p{color:#9AA5B1} td.med.b{color:#B06B3A}
 .rec{align-items:flex-start;gap:14px;padding-top:4px}
 .agc .agd{max-height:none}
 .agl{line-height:1.35}
+
+/* cabecera compacta de la fecha */
+.resumen{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+@media(min-width:760px){.resumen{grid-template-columns:repeat(4,1fr)}}
+.rc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 11px;display:flex;flex-wrap:wrap;
+  align-items:center;gap:7px;box-shadow:var(--shadow);font-size:13px}
+.rc.hl{box-shadow:inset 0 0 0 2px var(--gold),var(--shadow)}
+.rc .lb{flex-basis:100%;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.rc .av{width:26px;height:26px;font-size:10.5px}
+.rc b{font-weight:600;font-size:13px;line-height:1.15}
+.rc i{flex-basis:100%;font-style:normal;font-size:11.5px;color:var(--ink2)}
 /* ── ingreso ── */
 .login{min-height:100svh;display:grid;place-items:center;padding:20px;background:var(--navy)}
 .lcard{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px 22px;text-align:center}
@@ -775,14 +786,31 @@ function statsTemp(t){
   }).filter(x=>x.vueltas>0);
   return DB[key]=filas;
 }
+/* match play hipotético entre dos jugadores en una fecha, hoyo por hoyo */
+function matchHipotetico(f,a,b,ra,rb){
+  const c=DB.can.get(f.cid); const ga=DB.tar.get(f.fid+"|"+a), gb=DB.tar.get(f.fid+"|"+b);
+  if(!c||!ga||!gb||ga.some(x=>x==null)||gb.some(x=>x==null)) return null;
+  const base=Math.min(ra.hcp||0,rb.hcp||0);
+  const pa=reparto((ra.hcp||0)-base,c.idx), pb=reparto((rb.hcp||0)-base,c.idx);
+  let up=0, jugados=0, cerrado=0;
+  for(let h=0;h<18;h++){
+    const na=ga[h]-pa[h], nb=gb[h]-pb[h];
+    if(na<nb) up++; else if(nb<na) up--;
+    jugados=h+1;
+    if(Math.abs(up)>18-jugados){ cerrado=18-jugados; break; }
+  }
+  const v=Math.abs(up);
+  return {up, txt: up===0?"AS" : (cerrado>0? `${v}&${cerrado}` : `${v} UP`)};
+}
 function h2h(a,b){
   const res={fechas:0,gana:0,pierde:0,empata:0,det:[]};
-  DB.jugadas.forEach(f=>{
+  let acum=0;
+  [...DB.jugadas].sort((x,y)=>x.t-y.t||x.n-y.n).forEach(f=>{
     const ra=DB.res.find(r=>r.fid===f.fid&&r.jid===a), rb=DB.res.find(r=>r.fid===f.fid&&r.jid===b);
     if(!ra||!rb||ra.est!=="JUGO"||rb.est!=="JUGO") return;
     res.fechas++; const d=ra.neto-rb.neto;
-    if(d<0) res.gana++; else if(d>0) res.pierde++; else res.empata++;
-    res.det.push({f,na:ra.neto,nb:rb.neto});
+    if(d<0){ res.gana++; acum++; } else if(d>0){ res.pierde++; acum--; } else res.empata++;
+    res.det.push({f,na:ra.neto,nb:rb.neto,acum,match:matchHipotetico(f,a,b,ra,rb)});
   });
   const ry=DB.ry.filter(m=>(m.a===a&&m.b===b)||(m.a===b&&m.b===a));
   res.ryder=ry.length?{n:ry.length,pa:ry.reduce((s,m)=>s+(m.a===a?m.pa:m.pb),0),pb:ry.reduce((s,m)=>s+(m.a===b?m.pa:m.pb),0)}:null;
@@ -1000,11 +1028,11 @@ V.fecha = (arg) => {
   <div class="pills">${fs.map(x=>`<a href="#/fecha/${x.fid}" class="${x.fid===f.fid?"on":""}">F${x.n}</a>`).join("")}</div>
   <h1>${esc(canNom(f.cid))}</h1>
   <p class="lead">${fTitulo(f)} de ${t}${f.dia?`, ${f.dia}`:""}. Par ${P}, ${jug.length} jugadores.</p>
-  <div class="grid g3">
-    <div class="card pad hl"><div class="small muted">Ganador</div><div style="margin-top:8px">${win.map(r=>pl(r.jid,`${sgn(r.neto-P)} · ${r.neto} neto`)).join("")||"—"}</div></div>
-    <div class="card pad"><div class="small muted">Mejor gross</div><div style="margin-top:8px">${bg?pl(bg.r.jid,`${bg.gross} golpes`):"—"}</div></div>
-    <div class="card pad"><div class="small muted">Premios</div><div style="margin-top:8px;display:grid;gap:8px">
-      ${ba.map(r=>pl(r.jid,"Best Approach")).join("")}${ld.map(r=>pl(r.jid,"Long Drive")).join("")}${bsd.map(r=>pl(r.jid,"Approach o Long Drive")).join("")}${!ba.length&&!ld.length&&!bsd.length?`<span class="muted small">No se entregaron</span>`:""}</div></div>
+  <div class="resumen">
+    <div class="rc hl"><span class="lb">Ganador</span>${win.map(r=>`${av(r.jid,"",true)}<b>${esc(nom(r.jid))}</b><i>${sgn(r.neto-P)} · ${r.neto} neto</i>`).join("")||"—"}</div>
+    <div class="rc"><span class="lb">Mejor gross</span>${bg?`${av(bg.r.jid,"",true)}<b>${esc(nom(bg.r.jid))}</b><i>${bg.gross} golpes</i>`:"—"}</div>
+    <div class="rc"><span class="lb">Approach</span>${ba.length?ba.map(r=>`${av(r.jid,"",true)}<b>${esc(nom(r.jid))}</b>`).join(""):`<i class="muted">no se entregó</i>`}</div>
+    <div class="rc"><span class="lb">Long drive</span>${ld.length?ld.map(r=>`${av(r.jid,"",true)}<b>${esc(nom(r.jid))}</b>`).join(""):(bsd.length?bsd.map(r=>`${av(r.jid,"",true)}<b>${esc(nom(r.jid))}</b><i>approach o long drive</i>`).join(""):`<i class="muted">no se entregó</i>`)}</div>
   </div>
   <div class="segs" id="segF">
     <button data-m="tabla" class="${modoFecha==="tabla"?"on":""}">Leaderboard</button>
@@ -1124,19 +1152,62 @@ V.jugador = (arg) => {
       <div class="h2hs"><b>${H.empata}</b><span>empates</span></div>
       <div class="h2hs"><b>${H.pierde}</b><span>ganó ${esc(nom(rival))}</span></div></div>
       ${H.ryder?`<p class="note">En la Ryder Cup se cruzaron ${H.ryder.n} ${H.ryder.n===1?"vez":"veces"}: ${fmt(H.ryder.pa)} a ${fmt(H.ryder.pb)} en puntos.</p>`:""}
-      <div class="tw" style="margin-top:10px"><table><thead><tr><th class="l">Fecha</th><th>${esc(nom(id))}</th><th>${esc(nom(rival))}</th><th>Dif.</th></tr></thead>
-      <tbody>${H.det.slice().reverse().map(d=>`<tr><td class="l"><a class="lk" href="#/fecha/${d.f.fid}">${d.f.t} F${d.f.n} · ${esc(canNom(d.f.cid))}</a></td>
-        <td class="${d.na<d.nb?"win":""}">${d.na}</td><td class="${d.nb<d.na?"win":""}">${d.nb}</td><td class="${d.na<d.nb?"c-bi":d.na>d.nb?"c-10":"muted"}"><b>${d.na===d.nb?"—":sgn(d.na-d.nb)}</b></td></tr>`).join("")}</tbody></table></div>`
+      <div class="card" style="margin-top:12px"><div id="gH2H" class="chart"><div class="load">Cargando comparación…</div></div></div>
+      <div class="tw" style="margin-top:12px"><table><thead><tr><th class="l">Fecha</th><th>${esc(nom(id))}</th><th>${esc(nom(rival))}</th><th>Dif.</th><th>Acumulado</th><th>Match</th></tr></thead>
+      <tbody>${H.det.map(d=>`<tr><td class="l"><a class="lk" href="#/fecha/${d.f.fid}">${d.f.t} F${d.f.n}</a><div class="small muted">${esc(canNom(d.f.cid))}</div></td>
+        <td class="${d.na<d.nb?"win":""}">${d.na}</td><td class="${d.nb<d.na?"win":""}">${d.nb}</td>
+        <td class="${d.na<d.nb?"c-bi":d.na>d.nb?"c-10":"muted"}"><b>${d.na===d.nb?"—":sgn(d.na-d.nb)}</b></td>
+        <td class="${d.acum>0?"c-bi":d.acum<0?"c-10":"muted"}"><b>${d.acum>0?"+"+d.acum:d.acum}</b></td>
+        <td class="small ${d.match?(d.match.up>0?"c-bi":d.match.up<0?"c-10":"muted"):"muted"}">${d.match?d.match.txt:"—"}</td></tr>`).join("")}</tbody></table></div>
+      <p class="small muted" style="margin:8px 4px 0">El acumulado suma un punto por fecha ganada al neto. La columna Match es cómo habría terminado ese día jugando hoyo por hoyo, con la diferencia de handicap.</p>`
       :`<p class="muted" style="margin:0">Nunca coincidieron en una fecha.</p>`}
   </div>
   ${cuch.length?`<h2>Cucharas de madera <span class="cuch">${cuch.length} 🥄</span></h2><div class="card pad"><ul class="rows">${cuch.map(r=>`<li><div class="small">${ctxLink(F(r))}${r.est!=="JUGO"?` <span class="chip r">${r.est==="WO"?"WO":"abandonó"}</span>`:""}</div><span class="r neg">${fmt(r.medal)}</span></li>`).join("")}</ul></div>`:""}
   ${abw.length?`<p class="small muted" style="margin:10px 4px 0">${abw.map(r=>`${r.est==="WO"?"WO":"Abandonó"} en ${ctx(F(r))}`).join(". ")}.</p>`:""}`;
 };
+/* radar: compara los perfiles de juego de dos jugadores */
+function perfilRadar(id){
+  const V=vueltas().filter(v=>v.r.jid===id);
+  if(!V.length) return null;
+  const c={ea:0,bi:0,pa:0,bo:0,db:0}; V.forEach(v=>v.g.forEach((g,h)=>c[tipoHoyo(g,v.c.par[h])]++));
+  const n=V.length*18;
+  const gs=V.map(v=>v.gross).sort((a,b)=>a-b);
+  const prom=gs.reduce((a,b)=>a+b,0)/gs.length;
+  const cortos=[],largos=[];
+  V.forEach(v=>v.g.forEach((g,h)=>{ const p=v.c.par[h]; (p===3?cortos:p===5?largos:[]).push(g-p); }));
+  const m=l=>l.length?l.reduce((a,b)=>a+b,0)/l.length:0;
+  return {
+    "Birdies o mejor":(c.ea+c.bi)/n*100,
+    "Pares":c.pa/n*100,
+    "Regularidad":Math.max(0,100-(gs[gs.length-1]-gs[0])*2),
+    "Constancia (gross)":Math.max(0,100-(prom-72)*2),
+    "Par 3":Math.max(0,100-m(cortos)*40),
+    "Par 5":Math.max(0,100-m(largos)*40)
+  };
+}
 V.jugador.after = (arg) => {
   const s=document.getElementById("selJ"); if(s) s.onchange=()=>{ rivalSel=null; location.hash="#/jugador/"+s.value; };
   const r=document.getElementById("selR"); if(r) r.onchange=()=>{ rivalSel=+r.value; render(); };
   const lista=[...DB.jug.values()].sort((a,b)=>a.tour.localeCompare(b.tour)); const id=+arg||lista[0].id;
-  graficar(()=>{ const t=tema(); const VV=vueltas().filter(v=>v.r.jid===id).sort((a,b)=>a.f.t-b.f.t||a.f.n-b.f.n); const x=VV.map(v=>`${v.f.t} F${v.f.n}`);
+  graficar(()=>{ const t=tema();
+    /* radar del mano a mano */
+    const rv=document.getElementById("gH2H");
+    if(rv){
+      const ra=perfilRadar(id), rb=perfilRadar(rivalSel&&rivalSel!==id?rivalSel:[...DB.jug.keys()].find(x=>x!==id));
+      const riv=rivalSel&&rivalSel!==id?rivalSel:[...DB.jug.keys()].find(x=>x!==id);
+      if(ra&&rb){
+        const ejes=Object.keys(ra);
+        const tr=(p,nombre,color)=>({type:"scatterpolar",r:ejes.map(k=>Math.round(p[k])).concat([Math.round(p[ejes[0]])]),
+          theta:ejes.concat([ejes[0]]),fill:"toself",name:nombre,line:{color,width:2},fillcolor:color+"33",
+          hovertemplate:"%{theta}: %{r}<extra>"+nombre+"</extra>"});
+        Plotly.react("gH2H",[tr(ra,nom(id),t.navy),tr(rb,nom(riv),t.gold)],
+          base(t,{height:360,margin:{l:60,r:60,t:30,b:40},
+            polar:{bgcolor:"rgba(0,0,0,0)",radialaxis:{visible:true,range:[0,100],gridcolor:t.grid,tickfont:{size:9,color:t.ink3||t.grid}},
+              angularaxis:{gridcolor:t.grid,tickfont:{size:11}}},
+            legend:{orientation:"h",y:-.08,font:{size:11}}}),CFG);
+      } else rv.innerHTML=`<p class="load">Faltan vueltas completas para comparar.</p>`;
+    }
+    const VV=vueltas().filter(v=>v.r.jid===id).sort((a,b)=>a.f.t-b.f.t||a.f.n-b.f.n); const x=VV.map(v=>`${v.f.t} F${v.f.n}`);
     Plotly.react("gJ",[
       {x,y:VV.map(v=>v.gross-v.c.parT),name:"Gross al par",type:"scatter",mode:"lines+markers",line:{color:t.navy,width:2.6},marker:{size:7},
         customdata:VV.map(v=>[canNom(v.f.cid),v.gross,v.r.neto]),hovertemplate:"%{x} · %{customdata[0]}<br>Gross %{customdata[1]} · neto %{customdata[2]}<extra></extra>"},
@@ -1148,7 +1219,7 @@ V.jugador.after = (arg) => {
 /* ───────── RYDER ───────── */
 V.ryder = () => {
   const ts=[...new Set(DB.ry.map(r=>r.t))].sort((a,b)=>b-a);
-  if(!ts.length) return `<h1>Ryder Cup</h1><p class="lead">Todavía no hay partidos cargados.</p>`;
+  if(!ts.length) return `<h1>Pre Ryder Cup</h1><p class="lead">Todavía no hay partidos cargados.</p>`;
   const t=ts[0], M=DB.ry.filter(r=>r.t===t), fs=DB.fechas.filter(f=>f.t===t).sort((a,b)=>a.n-b.n);
   const B=M.reduce((a,m)=>a+m.pa,0), Rr=M.reduce((a,m)=>a+m.pb,0);
   const fB=fs.map(f=>M.filter(m=>m.fid===f.fid).reduce((a,m)=>a+m.pa,0)), fR=fs.map(f=>M.filter(m=>m.fid===f.fid).reduce((a,m)=>a+m.pb,0));
@@ -1171,21 +1242,22 @@ V.ryder = () => {
   const tabEq=(e,tt)=>`<div class="card pad"><h3 class="${e==="B"?"bags":"resto"}"><img class="crest" src="${LOGO[e==="B"?"bag":"resto"]}" alt="">${tt}</h3>
     <ul class="rows">${lst(e).map(([j,x],i)=>`<li><span class="rk">${i+1}</span>${pl(+j,`${x.g} ganados · ${x.e} empatados · ${x.l} perdidos`)}<span class="r">${x.p}<small>puntos</small></span></li>`).join("")}</ul></div>`;
   return `
-  <h1>Ryder Cup ${t}</h1>
-  <p class="lead">Cada fecha, los jugadores de cada equipo se ordenan por handicap y se enfrentan uno contra uno por posición. Ganar vale 3 puntos; si el rival falta, 1.</p>
+  <h1>Pre Ryder Cup ${t}</h1>
+  <p class="lead">Durante las ${DB.fechas.filter(f=>f.t===t).length} fechas del Tour, los dos equipos compitieron en paralelo: en cada fecha se ordenan por handicap y se enfrentan uno contra uno por posición. Ganar vale 3 puntos; si el rival falta, 1.
+  El ganador se lleva la localía de la Ryder Cup y elige primero las parejas.</p>
   <div class="card ryd"><div class="score">
     <div><img class="logo" src="${LOGO.bag}" alt=""><div class="t bags">Bags Boys</div></div>
     <div class="n"><span class="bags">${B}</span><span class="muted" style="font-size:.45em;padding:0 .3em">a</span><span class="resto">${Rr}</span></div>
     <div><img class="logo" src="${LOGO.resto}" alt=""><div class="t resto">Resto del Mundo</div></div></div>
     <div class="rydbar"><i class="bags" style="width:${B/(B+Rr)*100}%"></i><i class="resto" style="width:${Rr/(B+Rr)*100}%"></i></div>
-    <p class="champ">${B>Rr?"Bags Boys se quedó con la copa":Rr>B?"Resto del Mundo se quedó con la copa":"Terminó empatada"}</p></div>
+    <p class="champ">${B>Rr?"Bags Boys ganó la Pre Ryder: localía y primera elección de parejas":Rr>B?"Resto del Mundo ganó la Pre Ryder: localía y primera elección de parejas":"Terminó empatada"}</p></div>
   <div class="kpis kpi4" style="margin-top:12px">
     <div class="kpi"><div class="big">${jugados.length}</div><div class="lb">partidos jugados</div></div>
     <div class="kpi"><div class="big">${gB} – ${gR}</div><div class="lb">fechas ganadas</div></div>
     <div class="kpi"><div class="big">${M.filter(m=>m.def==="EMPATE").length}</div><div class="lb">empates</div></div>
     <div class="kpi"><div class="big">${M.filter(m=>m.def==="AUSENCIA"||m.def==="DOBLE_AUSENCIA").length}</div><div class="lb">partidos con ausencias</div></div>
   </div>
-  ${mvp?`<div class="card pad mvp" style="margin-top:12px"><div><div class="small muted">Jugador de la copa</div>${pl(+mvp[0],`${mvp[1].g} victorias en ${mvp[1].g+mvp[1].e+mvp[1].l} partidos`)}</div><div class="mvpn">${mvp[1].p}<small>puntos</small></div></div>`:""}
+  ${mvp?`<div class="card pad mvp" style="margin-top:12px"><div><div class="small muted">Jugador de la Pre Ryder</div>${pl(+mvp[0],`${mvp[1].g} victorias en ${mvp[1].g+mvp[1].e+mvp[1].l} partidos`)}</div><div class="mvpn">${mvp[1].p}<small>puntos</small></div></div>`:""}
   <h2>Fecha por fecha</h2>
   <div class="lb"><div class="tw"><table><thead><tr><th class="l">Equipo</th>${fs.map(f=>`<th><a href="#/fecha/${f.fid}">F${f.n}</a></th>`).join("")}<th>Total</th></tr></thead><tbody>
     <tr><td class="l"><img class="crest" src="${LOGO.bag}" alt=""><b class="bags">Bags Boys</b></td>${fB.map((v,i)=>`<td class="${v>fR[i]?"pts":"muted"}">${v}</td>`).join("")}<td class="pts big2">${B}</td></tr>
@@ -1199,7 +1271,7 @@ V.ryder = () => {
   <div class="grid g2">${tabEq("B","Bags Boys")}${tabEq("R","Resto del Mundo")}</div>
   <h2>Las mayores diferencias</h2>
   <div class="card pad"><ul class="rows">${marg.slice(0,6).map(x=>`<li>${pl(x.gan,`le ganó a ${esc(nom(x.per))} · ${ctx(DB.F.get(x.m.fid))}`)}<span class="r">+${x.dif}<small>${x.ng} a ${x.np}</small></span></li>`).join("")}</ul>
-    <p class="note">Partidos definidos por un solo golpe: ${marg.filter(x=>x.dif===1).length} en toda la copa.</p></div>
+    <p class="note">Partidos definidos por un solo golpe: ${marg.filter(x=>x.dif===1).length} en toda la Pre Ryder.</p></div>
   <h2>Las rivalidades</h2>
   <div class="card pad"><ul class="rows">${rivL.map(x=>`<li><div class="rivl">${pl(x.a)}<span class="vsm ${x.pa>x.pb?"bags":x.pb>x.pa?"resto":""}">${x.pa} – ${x.pb}</span>${pl(x.b)}</div><span class="r muted">${x.n} cruces</span></li>`).join("")}</ul></div>`;
 };
@@ -2022,6 +2094,7 @@ function vistaPerfil(){
     <a class="card lkcard" href="#/jugador/${id}"><b>Ver tu ficha completa</b><span class="muted small">águilas, premios, mano a mano y todo tu historial</span></a>
     <a class="card lkcard" href="#/estadisticas"><b>Estadísticas del Tour</b><span class="muted small">medallero, récords, temporadas y canchas</span></a>
   </div>
+  ${resumenPreRyder(id)}
   ${resumenRyder(id)}
   ${resumenAm(id)}
   ${cuch?`<p class="small muted" style="margin-top:12px">Tenés ${cuch} cuchara${cuch===1?"":"s"} de madera. Que no sume otra este año.</p>`:""}`;
@@ -2040,11 +2113,28 @@ function marcaVuelta(titulo,valor,v,dif){
 V.inicio = vistaPerfil;
 V.ryderhist = () => V.ryder();
 
-/* los eventos de Ryder jugados, para el perfil */
+/* la Pre Ryder: los puntos que aportó durante las fechas del Tour */
+function resumenPreRyder(id){
+  if(!DB || !DB.ry || !DB.ry.length) return "";
+  const mios=DB.ry.filter(m=>m.a===+id||m.b===+id);
+  if(!mios.length) return "";
+  const porT={};
+  mios.forEach(m=>{ const p=porT[m.t]=porT[m.t]||{pts:0,g:0,e:0,l:0,n:0};
+    const mio=m.a===+id?m.pa:m.pb;
+    p.pts+=mio; p.n++;
+    if(m.def==="EMPATE") p.e++; else if(m.def==="PARTIDO"||m.def==="ABANDONO"){ mio===3?p.g++:p.l++; } });
+  const eq=equipo(+id);
+  return `<h2>Pre Ryder Cup</h2>
+  <p class="lead">Los puntos que aportaste a ${eq?EQNOM[eq]:"tu equipo"} durante las fechas del Tour.</p>
+  <div class="lb"><div class="tw"><table><thead><tr><th class="l">Año</th><th>Partidos</th><th>Ganados</th><th>Empatados</th><th>Perdidos</th><th>Puntos</th></tr></thead>
+    <tbody>${Object.entries(porT).sort((a,b)=>b[0]-a[0]).map(([t,p])=>`<tr><td class="l"><a class="lk b" href="#/ryderhist">${t}</a></td>
+      <td>${p.n}</td><td class="c-bi">${p.g}</td><td>${p.e}</td><td class="c-10">${p.l}</td><td class="pts">${fmt(p.pts)}</td></tr>`).join("")}</tbody></table></div></div>`;
+}
+/* los eventos de Ryder oficial jugados, para el perfil */
 function resumenRyder(id){
   const L=S.eventos||[];
   const mios=L.filter(e=>e.matches&&e.matches.length);
-  if(!mios.length) return "";
+  if(!mios.length) return `<h2>Ryder Cup</h2><div class="aviso">La Ryder oficial todavía no se jugó. Cuando se juegue, acá vas a ver tus partidos y los puntos que aportaste.</div>`;
   const t=mios.reduce((a,e)=>({g:a.g+e.ganados,p:a.p+e.perdidos,e:a.e+e.empatados,pts:a.pts+e.puntos}),{g:0,p:0,e:0,pts:0});
   return `<h2>Ryder Cup</h2>
   <div class="kpis kpi4"><div class="kpi"><div class="big">${mios.length}</div><div class="lb">copas jugadas</div></div>
@@ -2076,7 +2166,10 @@ function pintar_(){
     if(tab==="amis") cuerpo = vistaAmistosos();
     else if(tab==="vivo") cuerpo = r==="armar" ? (A.cruce?vistaCruce():vistaArmar()) : r==="hcp" ? vistaHcp() : (S.match?vistaMatch():vistaVivo());
     else if(tab==="inicio") cuerpo = vistaPerfil();
-    else cuerpo = DB ? (V[r]?V[r](a):V.estadisticas("")) : `<div class="load">Cargando estadísticas…</div>`;
+    else {
+      const arg = (r==="jugador" && !a) ? String(S.ses.jugador.id) : a;   /* Jugadores abre en tu propia ficha */
+      cuerpo = DB ? (V[r]?V[r](arg):V.estadisticas("")) : `<div class="load">Cargando estadísticas…</div>`;
+    }
   }catch(e){ cuerpo=`<h1>No se pudo mostrar esta página</h1><p class="lead">${esc(e.message)}</p>`; console.error(e); }
   const enVivo = S.est && S.est.evento;
   const pend = pendientes().length;
@@ -2122,7 +2215,7 @@ function ligarShell(tab,r,a){
     const mm=S.est.matches.find(x=>x.match_id===S.match); S.hoyo=Math.min(18,(mm.jugados||0)+1); location.hash="#/vivo"; };
   if(tab==="amis") ligarAmistosos();
   else if(tab==="vivo") ligar();
-  else if(tab==="stats" && DB && V[r] && V[r].after) V[r].after(a);
+  else if(tab==="stats" && DB && V[r] && V[r].after) V[r].after((r==="jugador"&&!a)?String(S.ses.jugador.id):a);
 }
 /* ligar() del módulo en vivo sin volver a dibujar la cáscara */
 function ligar(){
