@@ -672,6 +672,11 @@ tr.clas td.o{color:var(--rojo2)}
 .mrow.am3{grid-template-columns:1fr auto}
 .mrow .sub{grid-column:1/-1;font-size:11.5px;color:var(--ink3)}
 /* PIN */
+.salida{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 12px}
+.salida button{border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;min-height:36px}
+.salida button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+:root[data-theme="dark"] .salida button.on{background:var(--gold);color:#050C18;border-color:var(--gold)}
+.salida .vsx{font-weight:400;opacity:.7}
 .pinwho{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:20px}
 .pinwho .ini{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--gold);color:#0A1F3D;font-family:var(--cond);font-weight:700;font-size:22px}
 .pinwho b{font-family:var(--cond);font-size:22px;line-height:1.1}
@@ -1622,8 +1627,8 @@ async function reLogin(){
 /* ═══════════════════ MOTOR SUPABASE (Fase 4) ═══════════════════
    Con SB_URL y SB_KEY cargados, la app juega en vivo contra Supabase.
    Vacíos, o con ?motor=apps en la dirección, usa el script de Google como antes (respaldo). */
-const SB_URL = "https://refyzpcyfxwixmypfcch.supabase.co";   // ← Project URL de Supabase (https://xxxx.supabase.co)
-const SB_KEY = "sb_publishable_QN21FufTGSDkL1BcFoJx8w_6EJ6av0t";   // ← clave PÚBLICA (anon / publishable). Nunca la de servicio.
+const SB_URL = "";   // ← Project URL de Supabase (https://xxxx.supabase.co)
+const SB_KEY = "";   // ← clave PÚBLICA (anon / publishable). Nunca la de servicio.
 const MOTOR = (() => { const q = new URLSearchParams(location.search).get("motor");
   if (q === "apps") return "apps"; return (SB_URL && SB_KEY) ? "supabase" : "apps"; })();
 
@@ -2171,7 +2176,12 @@ function vistaMatch(){
   const pdM=pendDe(m.match_id), pk=new Set(Object.keys(pdM));
   const tar={}; Object.keys(tarS).forEach(j=>tar[j]=tarS[j].map((g,h)=>pdM[j+"|"+(h+1)]!=null?pdM[j+"|"+(h+1)]:g));
   const aviso = unaBola?`<div class="aviso">En ${FORMATOS[m.formato]} la pareja juega una sola bola: se carga un resultado por equipo.</div>`:"";
-  const puedo = S.ses.jugador.rol==="admin" || m.bags.concat(m.resto).map(String).includes(String(S.ses.jugador.id));
+  /* misma salida: misma sesión y mismo horario. Un teléfono por línea carga todos sus cruces */
+  const yoId=String(S.ses.jugador.id), juegaEn=x=>x.bags.concat(x.resto).map(String).includes(yoId);
+  const salida=(m.hora||"").trim()?e.matches.filter(x=>x.sesion_id===m.sesion_id&&(x.hora||"").trim()===(m.hora||"").trim()):[m];
+  const puedo = S.ses.jugador.rol==="admin" || juegaEn(m) || salida.some(juegaEn);
+  const otrosSalida = salida.filter(x=>x.match_id!==m.match_id);
+  const selSalida = otrosSalida.length && puedo ? `<div class="salida"><span class="small muted">Misma salida${m.hora?" ("+esc(m.hora)+")":""}:</span>${salida.map(x=>`<button class="${x.match_id===m.match_id?"on":""}" data-otro="${x.match_id}">${esc(x.bags.map(nom).join(" / "))} <span class="vsx">vs</span> ${esc(x.resto.map(nom).join(" / "))}</button>`).join("")}</div>` : "";
   const tramo=(desde,hasta)=>`<div class="tw"><table><thead>
     <tr><th class="l">Hoyo</th>${[...Array(hasta-desde+1)].map((_,i)=>`<th>${desde+i}</th>`).join("")}<th>${desde===1?"Ida":"Vuelta"}</th></tr>
     <tr><th class="l">Par</th>${[...Array(hasta-desde+1)].map((_,i)=>`<th>${par[desde-1+i]}</th>`).join("")}<th>${par.slice(desde-1,hasta).reduce((a,b)=>a+b,0)}</th></tr></thead><tbody>
@@ -2203,7 +2213,7 @@ function vistaMatch(){
     <div class="res"><b>${st.t}</b><span>${m.cerrado?"final":(m.jugados?"hoyo "+m.jugados:"por salir")}</span></div>
     ${ladoHdr(m.resto,{lado:"r",nombre:nom,av:avatar,todos:m.bags.concat(m.resto),cls:"c-r",sub:"Resto del Mundo"})}
   </div></div>
-  ${falta}${aviso}${tramo(1,9)}${tramo(10,18)}${leyenda(pk.size>0)}
+  ${selSalida}${falta}${aviso}${tramo(1,9)}${tramo(10,18)}${leyenda(pk.size>0)}
   ${hcpInfo}${carga}`;
 }
 
@@ -2883,6 +2893,7 @@ function ligar(){
     S.hoyo=Math.min(18,(m.jugados||0)+1); pintar();
   });
   const v=document.getElementById("volverV"); if(v) v.onclick=()=>{ S.match=null; pintar(); };
+  document.querySelectorAll("[data-otro]").forEach(b=>b.onclick=()=>{ S.match=b.dataset.otro; S.err=""; pintar(); window.scrollTo(0,0); });   /* mismo hoyo, otro cruce de la salida */
   const ha=document.getElementById("hcpArmar");
   if(ha) ha.onclick=async()=>{ A.cruce=false; await abrirEvento(S.est.evento.evento_id); location.hash="#/armar"; };
   const mAct=S.est&&S.est.matches&&S.match&&S.est.matches.find(x=>x.match_id===S.match);
@@ -2890,7 +2901,20 @@ function ligar(){
     const jug=(mAct.una_bola?[mAct.bags[0],mAct.resto[0]]:mAct.bags.concat(mAct.resto)).map(String);
     const tarS={}; mAct.tarjeta.forEach(t=>tarS[String(t.jugador_id)]=t.golpes);
     ligarCarga({mid:mAct.match_id, jug, hoyo:S.hoyo, par:S.est.cancha.par, guardado:(j,i)=>(tarS[String(j)]||[])[i],
-      nombre:j=>nom(j), avanzar:h=>{ S.hoyo=h; }, enviar:()=>refrescar(true)});
+      nombre:j=>nom(j), enviar:()=>refrescar(true),
+      /* con varios cruces en la misma salida: después de guardar, pasa al siguiente cruce que le falte ese hoyo;
+         cuando la salida completó el hoyo, vuelve al primer cruce en el hoyo siguiente */
+      avanzar:h=>{
+        const hr=(mAct.hora||"").trim();
+        const salida=hr?S.est.matches.filter(x=>x.sesion_id===mAct.sesion_id&&(x.hora||"").trim()===hr):[mAct];
+        if(salida.length<2){ S.hoyo=h; return; }
+        const actual=h-1;
+        const falta=x=>{ const js=(x.una_bola?[x.bags[0],x.resto[0]]:x.bags.concat(x.resto)).map(String), t={}, pd=pendDe(x.match_id);
+          x.tarjeta.forEach(tt=>t[String(tt.jugador_id)]=tt.golpes); return js.some(j=>(t[j]||[])[actual-1]==null && pd[j+"|"+actual]==null); };
+        const i=salida.findIndex(x=>x.match_id===mAct.match_id);
+        const sig=salida.slice(i+1).concat(salida.slice(0,i)).find(falta);
+        if(sig){ S.match=sig.match_id; S.hoyo=actual; } else { S.match=salida[0].match_id; S.hoyo=h; }
+      }});
   }
   const be=document.getElementById("borrarEv");
   if(be) be.onclick=async()=>{
