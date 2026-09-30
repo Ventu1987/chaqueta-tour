@@ -1622,8 +1622,8 @@ async function reLogin(){
 /* ═══════════════════ MOTOR SUPABASE (Fase 4) ═══════════════════
    Con SB_URL y SB_KEY cargados, la app juega en vivo contra Supabase.
    Vacíos, o con ?motor=apps en la dirección, usa el script de Google como antes (respaldo). */
-const SB_URL = "";   // ← Project URL de Supabase (https://xxxx.supabase.co)
-const SB_KEY = "";   // ← clave PÚBLICA (anon / publishable). Nunca la de servicio.
+const SB_URL = "https://refyzpcyfxwixmypfcch.supabase.co";   // ← Project URL de Supabase (https://xxxx.supabase.co)
+const SB_KEY = "sb_publishable_QN21FufTGSDkL1BcFoJx8w_6EJ6av0t";   // ← clave PÚBLICA (anon / publishable). Nunca la de servicio.
 const MOTOR = (() => { const q = new URLSearchParams(location.search).get("motor");
   if (q === "apps") return "apps"; return (SB_URL && SB_KEY) ? "supabase" : "apps"; })();
 
