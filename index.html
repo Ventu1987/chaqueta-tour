@@ -1849,7 +1849,7 @@ function sbTiempoReal(){
       if (AM.act && r === "amistosos") traerAmistoso(AM.act.partida_id);
     }, 400); };
     const ch = sbCliente().channel("chaqueta-vivo");
-    ["golpes","cruces","eventos","sesiones","hcp_evento","partidas","partida_jugadores"]
+    ["avisos","cruces","eventos","sesiones","hcp_evento","partidas"]   /* avisos: uno por guardado (no uno por golpe) */
       .forEach(tb => ch.on("postgres_changes", { event:"*", schema:"public", table:tb }, aviso));
     ch.subscribe();
   }catch(e){ window.__rt = false; }
