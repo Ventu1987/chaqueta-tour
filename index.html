@@ -196,7 +196,7 @@ th a{text-decoration:none;color:inherit}
 .load{padding:48px 16px;text-align:center;color:var(--ink3);font-size:13px}
 
 /* ryder */
-.score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;text-align:center;padding:20px 14px}
+.score{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;text-align:center;padding:20px 14px}
 .score .t{font-family:var(--cond);font-weight:700;font-size:20px}
 .score .n{font-family:var(--cond);font-weight:700;font-size:56px;line-height:1}
 .bags{color:var(--blue)} .resto{color:var(--yellow)}
@@ -705,6 +705,85 @@ tr.clas td.o{color:var(--rojo2)}
 .atras{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;color:var(--ink2);font-weight:600;font-size:14px;text-decoration:none}
 .rows li.irp{cursor:pointer}
 #editH{white-space:normal;line-height:1.35;text-align:center;width:100%}
+/* nada se sale de la pantalla (si algo se sale, el teléfono achica todo y la barra cambia de tamaño) */
+html,body{overflow-x:hidden}
+main{overflow-x:clip}
+.grid > *{min-width:0}
+.score > *{min-width:0}
+.score .t{white-space:normal;overflow-wrap:anywhere}
+.card > .mrow{padding-left:12px;padding-right:12px}
+/* encabezado del match (estilo tarjeta de golf): el que va ganando, pintado del nombre al resultado */
+.mh2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card);box-shadow:var(--shadow);margin-bottom:10px}
+.mh2.la{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)} .mh2.lb{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}
+.ms{display:flex;align-items:center;gap:10px;padding:14px 12px;min-width:0}
+.ms.der{text-align:right}
+.ms .who{flex:1;min-width:0}
+.ms .nm{font-family:var(--cond);font-weight:700;font-size:18px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms .hc{font-size:12px;color:var(--ink2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms .rs{flex:none;text-align:center;min-width:54px}
+.ms .rs b{display:block;font-family:var(--cond);font-size:27px;line-height:1;font-weight:700}
+.ms .rs span{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-top:4px;opacity:.85}
+.ms.lid{color:#fff} .ms.lid .hc{color:inherit;opacity:.85}
+.ms.f-b{background:#1D4ED8} .ms.f-o{background:#C8102E} .ms.f-r,.ms.f-y{background:#E0A800;color:#1d1500}
+.mh2-par{grid-column:1/-1;display:flex;justify-content:center;align-items:baseline;gap:8px;padding:8px;border-top:1px solid var(--line);background:var(--soft)}
+.mh2-par b{font-family:var(--cond);font-size:19px}
+.mh2-par span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+/* filas de match: mismo criterio, el que va ganando pintado hasta el resultado */
+.mrow.lidA,.mrow.lidB{position:relative;isolation:isolate}
+.mrow.lidA::before,.mrow.lidB::before{content:"";position:absolute;top:5px;bottom:5px;z-index:-1;border-radius:12px}
+.mrow.lidA::before{left:4px;right:calc(50% - 44px)}
+.mrow.lidB::before{right:4px;left:calc(50% - 44px)}
+.mrow.f-b::before{background:#1D4ED8} .mrow.f-o::before{background:#C8102E} .mrow.f-r::before{background:#E0A800}
+.mrow.lidA > .lado:first-child, .mrow.lidB > .lado.r{color:#fff}
+.mrow.lidA > .lado:first-child *, .mrow.lidB > .lado.r *{color:inherit!important}
+.mrow.f-r.lidA > .lado:first-child, .mrow.f-r.lidB > .lado.r{color:#1d1500}
+.mrow.lidA > .est, .mrow.lidB > .est{background:transparent!important;color:#fff!important;border-color:transparent!important;font-size:16px}
+.mrow.f-r.lidA > .est, .mrow.f-r.lidB > .est{color:#1d1500!important}
+.mrow.lidA > .sub, .mrow.lidB > .sub{position:relative}
+/* 4-2-0: puntos y diferencia con el último */
+.p4 span small{font-size:.55em;font-weight:600;opacity:.75;margin-left:4px}
+/* long drive y best approach */
+.premio{display:flex;align-items:center;gap:10px;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--goldbg);border:1px solid var(--gold)}
+.premio svg{width:26px;height:26px;color:var(--gold);flex:none}
+.premio b{display:block;font-size:13.5px;letter-spacing:.03em}
+.premio span{display:block;font-size:12.5px;color:var(--ink2);margin-top:1px}
+.premios-linea{font-size:12.5px;color:var(--ink2);margin-top:6px}
+.premios-linea b{color:var(--ink)}
+.hoja{position:fixed;inset:0;z-index:60;background:rgba(5,12,24,.62);display:flex;align-items:flex-end;justify-content:center}
+.hoja .caja{width:100%;max-width:520px;background:var(--card);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(0,0,0,.35)}
+.hoja h3{margin:0 0 2px;font-size:18px} .hoja p{margin:0 0 12px;color:var(--ink2);font-size:13.5px}
+.hoja .ops{display:grid;gap:8px}
+.hoja .ops button{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font:600 15px/1.2 inherit;cursor:pointer;text-align:left}
+.hoja .ops button.lider{border-color:var(--gold)}
+.hoja .ops button.nadie{justify-content:center;background:none}
+.chk{display:flex;align-items:center;gap:10px;margin-top:12px;font-weight:600;font-size:14px;cursor:pointer}
+.chk input{width:20px;height:20px;accent-color:var(--gold)}
+.emo{font-size:23px;line-height:1;display:inline-block;height:24px;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.tabbar button:not(.on) .emo{filter:saturate(.75);opacity:.85}
+.jcard .ic .emo{font-size:28px;height:30px}
+.prof.centro{flex-direction:column;justify-content:center;text-align:center;gap:12px}
+.prof.centro > div{display:flex;flex-direction:column;align-items:center}
+.prof.centro .teamline,.prof.centro .ttl{justify-content:center}
+.stb{font-size:12.5px;color:var(--ink2);margin:6px 2px 12px;line-height:1.5}
+.stb b{color:var(--ink)}
+.p4.v{background:rgba(15,123,79,.14)} .p4.v span,.p4.v b{color:var(--verde)}
+.c-v{color:var(--verde)!important} .gb.v{background:var(--verde);color:#fff}
+.cruce{grid-template-columns:22px minmax(0,1fr) 30px!important;grid-template-areas:"nro c1 x" "nro vs x" "nro c2 x";row-gap:6px!important;align-items:center}
+.cruce .nro{grid-area:nro} .cruce .x{grid-area:x}
+.cruce .c1{grid-area:c1} .cruce .c2{grid-area:c2}
+.cruce .vs{grid-area:vs;justify-self:start;font-size:12px!important;padding:2px 8px!important}
+.cruce .c1,.cruce .c2{align-items:stretch!important;width:100%}
+.cruce .c2 .cj2{flex-direction:row!important}
+.cj2{width:100%}
+.cruce .c2{text-align:left!important}
+.card.ses{padding:12px 14px}
+.rows li > *, .rec > *{min-width:0}
+a.pl{min-width:0;overflow:hidden}
+a.pl .n{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis}
+a.pl .n small{white-space:normal}
+.cj2 .t{flex:1;min-width:0}
+.cj2 .hb{flex:none}
+.cruce .c1 .t{color:var(--bags);font-weight:600} .cruce .c2 .t{color:var(--resto);font-weight:600}
 /* prolijidad general (v4) */
 .card:not(.pad):not(.lb):not(.lkcard):not(.ses):not(.hl):not(:has(> .mrow)):not(:has(> .chart)){padding:14px 16px}
 .card.hl{padding:12px 14px}
@@ -714,7 +793,7 @@ tr.clas td.o{color:var(--rojo2)}
 .aviso{margin:10px 0 14px}
 .est.txt{font-size:12.5px;padding-left:9px;padding-right:9px}
 .nav2{justify-content:space-between}
-.nav2 a{padding:11px 7px;font-size:13px}
+.nav2 a{padding:11px 5px;font-size:12.5px}
 .btn.volver-vivo,.atras{display:inline-flex;align-items:center;gap:4px;width:auto;background:none;border:0;box-shadow:none;padding:4px 0;margin:0 0 10px;
   color:var(--ink2);font-weight:600;font-size:14px;text-decoration:none;cursor:pointer}
 /* tarjeta en vivo: columnas parejas, los círculos de golpe quedan redondos */
@@ -1282,8 +1361,8 @@ V.jugador = (arg) => {
   const hcpT=porT.filter(x=>x.hcp!=null).slice().sort((a,b)=>a.t-b.t);
   return `
   ${selector}
-  <section class="prof">${av(id,"xl",true)}<div><h1>${esc(J.tour)}</h1>
-    <div class="meta">${esc(J.nombre)} ${esc(J.apellido)} · ${P.length} fecha${P.length===1?"":"s"} jugada${P.length===1?"":"s"}</div>
+  <section class="prof centro">${av(id,"xl",true)}<div><h1>${esc(J.tour)}</h1>
+    <div class="meta">${P.length} fecha${P.length===1?"":"s"} jugada${P.length===1?"":"s"}</div>
     ${equipo(id)?`<div class="teamline"><img src="${LOGO[equipo(id)]}" alt="">${EQNOM[equipo(id)]}</div>`:""}
     ${tit.length||podT.length?`<div class="ttl">${tit.map(t=>`<span>Campeón ${t}</span>`).join("")}${podT.map(x=>`<span class="alt">${x.f.pos}° en ${x.t}</span>`).join("")}</div>`:""}</div></section>
   ${esYo?cardEnJuego(id):""}
@@ -1572,8 +1651,10 @@ function bloqueCarga(o){
     const rec=o.recibe(j), ge=o.golpeEn?o.golpeEn(j,h-1):0;
     return `<div class="cargaj"><div class="cj">${o.avatarDe(j)}<div class="nm ${o.color?"c-"+o.color(j):""}">${esc(o.nombre(j))}<span class="gp">${rec} golpe${rec===1?"":"s"}${ge?`<span class="gchip">${ge>=2?"●● 2 golpes acá":"● golpe acá"}</span>`:""} · ${est}</span></div></div>
       <div class="step"><button data-k="${esc(k)}" data-d="-1" aria-label="menos">−</button><b data-v="${esc(k)}">${v}</b><button data-k="${esc(k)}" data-d="1" aria-label="más">+</button></div></div>`; }).join("");
+  const prem=(o.premiosEn?o.premiosEn(h):[]).map(t=>{ const l=(premiosDe(o.premios&&o.premios())[t]||{}).j;
+    return `<div class="premio">${ICO.bandera}<div><b>En este hoyo se juega el ${TIPO_PREMIO[t]}</b><span>${l?"Va ganando "+esc(o.nombre(l)):"Todavía nadie lo marcó"}</span></div></div>`; }).join("");
   return `<div class="card"><h3>Cargar el hoyo</h3><div class="hoyosel">${sel}</div>
-    <div class="small muted">Hoyo ${h} · par ${parH}</div>${filas}
+    <div class="small muted">Hoyo ${h} · par ${parH}</div>${prem}${filas}
     <button class="btn guardarhoyo" id="guardarHoyo">Guardar hoyo ${h}${h<18?" y pasar al "+(h+1):""}</button>
     <div class="err">${esc(S.err)}</div></div>`;
 }
@@ -1583,7 +1664,7 @@ function ligarCarga(o){
     const st=el.closest(".cargaj")&&el.closest(".cargaj").querySelector(".stc"); if(st){ st.className="stc edit"; st.textContent="sin guardar"; } };
   document.querySelectorAll(".step button[data-k]").forEach(b=>b.onclick=()=>{
     const k=b.dataset.k, el=[...document.querySelectorAll("[data-v]")].find(x=>x.dataset.v===k); if(!el) return;
-    marcar(k, Math.max(1,Math.min(15,(+el.textContent)+(+b.dataset.d)))); });
+    marcar(k, Math.max(1,Math.min(20,(+el.textContent)+(+b.dataset.d)))); });
   document.querySelectorAll(".step b[data-v]").forEach(b=>b.onclick=()=>marcar(b.dataset.v,+b.textContent));
   document.querySelectorAll(".hoyosel button").forEach(b=>b.onclick=()=>{ o.avanzar(+b.dataset.h); S.err=""; pintar(); });
   const gh=document.getElementById("guardarHoyo");
@@ -1596,7 +1677,9 @@ function ligarCarga(o){
       if(S.bor[k]!=null){ items.push({match_id:o.mid,jugador_id:String(j),hoyo:o.hoyo,golpes:S.bor[k],t}); delete S.bor[k]; return; }
       if(o.guardado(j,o.hoyo-1)==null && pdA[j+"|"+o.hoyo]==null) items.push({match_id:o.mid,jugador_id:String(j),hoyo:o.hoyo,golpes:parH,t,def:1}); });
     if(items.length) encolar(items);
+    const hoyoG=o.hoyo, tipos=o.premiosEn?o.premiosEn(hoyoG):[];
     S.err=""; o.avanzar(Math.min(18,o.hoyo+1));
+    if(tipos.length) S.premioPend={mid:o.mid, hoyo:hoyoG, tipos, i:0, jug:o.linea(), nombre:o.nombre, av:o.avatarDe, premios:o.premios, listo:o.enviar};
     pintar(); o.enviar();
   };
 }
@@ -1639,7 +1722,7 @@ function ligarEditor(pref,c){
 const ICO={
   perfil:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7"/></svg>`,
   stats:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><rect x="5" y="11" width="3.2" height="7.5" rx="1"/><rect x="10.4" y="5" width="3.2" height="13.5" rx="1"/><rect x="15.8" y="13.5" width="3.2" height="5" rx="1"/></svg>`,
-  golfista:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="3.8" r="2"/><path d="M13.3 7l-1.2 6.2L9 21M12.1 13.2L15.6 21"/><path d="M13.1 9.2L7.2 7.6L4.2 3"/><circle cx="19.5" cy="20.2" r="1"/></svg>`,
+  golfista:`<span class="emo" aria-hidden="true">🏌️‍♂️</span>`,
   vivo:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.6"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg>`,
   copa:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 21h8M9.5 18h5"/></svg>`,
   bandera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V3l11 4-11 4"/><ellipse cx="9" cy="21" rx="6" ry="1.2"/></svg>`
@@ -1784,7 +1867,7 @@ function armarEstado(r){
   const sid = {}; (r.sesiones || []).forEach(s => sid[s.sesion_id] = s);
   const matches = (r.cruces || []).map(m => calcMatch(m, sid[m.sesion_id] || {}, gpm[m.match_id] || [], cancha, hcp, ev));
   let B = 0, R = 0; matches.forEach(m => { B += m.puntos.bags; R += m.puntos.resto; });
-  return { ok:true, evento:ev, sesiones:r.sesiones || [], matches, marcador:{ bags:B, resto:R },
+  return { ok:true, evento:ev, sesiones:r.sesiones || [], matches, marcador:{ bags:B, resto:R }, premios:r.premios || [],
     cancha:{ id:cancha.id, nombre:cancha.nombre, recorrido:cancha.recorrido, par:cancha.par, idx:cancha.idx },
     hcp, hcp_ajustado:aj, momento:r.momento, otros_en_juego:r.otros_en_juego || 0 };
 }
@@ -1792,6 +1875,7 @@ function armarAbrir(r){
   const e = armarEstado(r), ev = e.evento;
   return { ok:true, hcp:e.hcp, hcp_ajustado:e.hcp_ajustado,
     evento:{ evento_id:ev.evento_id, nombre:ev.nombre, estado:ev.estado, hcp_modo:ev.hcp_modo, porcentaje:ev.porcentaje, cancha_id:ev.cancha_id,
+      ld_hoyo:ev.ld_hoyo || null, ba_hoyo:ev.ba_hoyo || null,
       canchaNombre:((e.cancha.nombre || "") + (e.cancha.recorrido ? " " + e.cancha.recorrido : "")) },
     sesiones: e.sesiones.map(s => ({ sesion_id:s.sesion_id, nombre:s.nombre, formato:s.formato,
       matches: e.matches.filter(m => m.sesion_id === s.sesion_id).map(m => ({ match_id:m.match_id, hora:m.hora, bags:m.bags, resto:m.resto })) })) };
@@ -1818,7 +1902,7 @@ function armarPartida(a){
   const ids = jug.map(j => j.id), pts = {}; ids.forEach(j => pts[j] = 0);
   const lado = j => String((jug.find(x => x.id === j) || {}).lado || "");
   const A = ids.filter(j => lado(j) === "A"), B = ids.filter(j => lado(j) === "B");
-  const pb = Number(a.p_bola ?? 1), psu = Number(a.p_suma || 0);
+  const pb = Number(a.p_bola ?? 1), psu = Number(a.p_suma || 0), des = !!a.desempate;
   if (a.modalidad === "FOURBALL"){ pts.A = 0; pts.B = 0; }
   let up = 0, hoyos = [], jugados = 0, parado = false, cerrado = false, falta = null;
   for (let h = 0; h < 18; h++){
@@ -1829,6 +1913,11 @@ function armarPartida(a){
       if (n[ids[0]] < n[ids[1]]){ up++; hoyos.push(ids[0]); } else if (n[ids[1]] < n[ids[0]]){ up--; hoyos.push(ids[1]); } else hoyos.push("=");
       jugados = h + 1; if (Math.abs(up) > 18 - jugados) cerrado = true; continue;
     }
+    if (a.modalidad === "STABLEFORD"){
+      /* stableford neto: 2 puntos el par, uno más por cada golpe abajo, uno menos por cada golpe arriba (mínimo 0) */
+      ids.forEach(j => { if (n[j] != null) pts[j] += Math.max(0, 2 + Number(par[h]) - n[j]); });
+      if (!incompleto) jugados++; hoyos.push(null); continue;
+    }
     if (incompleto){ hoyos.push(null); continue; }
     jugados++;
     if (a.modalidad === "P420"){
@@ -1838,10 +1927,12 @@ function armarPartida(a){
       else if (v[1] === v[2]){ pts[orden[0]] += 4; pts[orden[1]] += 1; pts[orden[2]] += 1; hoyos.push(orden[0]); }
       else { pts[orden[0]] += 4; pts[orden[1]] += 2; hoyos.push(orden[0]); }
     } else {
-      const mejor = l => Math.min(...l.map(j => n[j])), suma = l => l.reduce((s, j) => s + n[j], 0);
-      const ma = mejor(A), mb = mejor(B);
-      if (ma < mb) pts.A += pb; else if (mb < ma) pts.B += pb; else { pts.A += pb / 2; pts.B += pb / 2; }
-      if (psu > 0){ const sa = suma(A), sb = suma(B); if (sa < sb) pts.A += psu; else if (sb < sa) pts.B += psu; else { pts.A += psu / 2; pts.B += psu / 2; } }
+      /* mejor pelota; si empata y está el desempate, la segunda pelota. Empate: nadie suma */
+      const mejor = l => Math.min(...l.map(j => n[j])), segunda = l => Math.max(...l.map(j => n[j])), suma = l => l.reduce((s, j) => s + n[j], 0);
+      let ma = mejor(A), mb = mejor(B);
+      if (ma === mb && des){ ma = segunda(A); mb = segunda(B); }
+      if (ma < mb) pts.A += pb; else if (mb < ma) pts.B += pb;
+      if (psu > 0){ const sa = suma(A), sb = suma(B); if (sa < sb) pts.A += psu; else if (sb < sa) pts.B += psu; }
       hoyos.push(ma < mb ? "A" : (mb < ma ? "B" : "="));
     }
   }
@@ -1849,9 +1940,10 @@ function armarPartida(a){
   if (a.modalidad === "MATCH"){ const rest = 18 - jugados, v = Math.abs(up);
     resumen = jugados === 0 ? "Sin empezar" : (cerrado && rest > 0 ? v + "&" + rest : (v === 0 ? (jugados === 18 ? "Empatados" : "AS") : v + " UP"));
     lider = up > 0 ? ids[0] : (up < 0 ? ids[1] : ""); }
-  else if (a.modalidad === "P420"){ const orden = ids.slice().sort((x, y) => pts[y] - pts[x]); resumen = orden.map(j => pts[j]).join(" - "); lider = orden[0]; }
+  else if (a.modalidad === "P420" || a.modalidad === "STABLEFORD"){ const orden = ids.slice().sort((x, y) => pts[y] - pts[x]); resumen = orden.map(j => pts[j]).join(" - "); lider = (orden.length > 1 && pts[orden[0]] === pts[orden[1]]) ? "" : orden[0]; }
   else { resumen = pts.A + " a " + pts.B; lider = pts.A > pts.B ? "A" : (pts.B > pts.A ? "B" : ""); }
   return { partida_id:a.partida_id, modalidad:a.modalidad, estado:a.estado, dia:a.dia, creador:a.creador, hcp_modo:a.hcp_modo, porcentaje:pct,
+    desempate:des, ld_hoyo:a.ld_hoyo || null, ba_hoyo:a.ba_hoyo || null, premios:a.premios || [],
     p_bola:pb, p_suma:psu, cancha:{ id:cancha.id, nombre:cancha.nombre, recorrido:cancha.recorrido, par, idx },
     jugadores: jug.map(j => ({ id:j.id, lado:String(j.lado || ""), hcp:Number(j.hcp) || 0, recibe:hcps[j.id], rep:rep[j.id],
       golpes:[...Array(18)].map((_, h) => gm[j.id + "|" + (h + 1)] ?? null) })),
@@ -1876,7 +1968,7 @@ async function apiSB(a, d = {}){
       return rpc("cargar_golpes", { p_juego:d.match_id, p_items:items.map(i => ({ jugador_ref:String(i.jugador_ref ?? i.jugador_id), hoyo:+i.hoyo,
         golpes:+i.golpes, t:i.t ? +i.t : null, cola:!!Number(i.cola), def:!!Number(i.def) })) }); }
     case "crearEvento": return rpc("crear_evento", { p:{ temporada:d.temporada, nombre:d.nombre, dia:d.dia || "", cancha_id:d.cancha_id,
-        hcp_modo:d.hcp_modo, porcentaje:d.porcentaje, pts_gana:d.pts_gana, pts_empata:d.pts_empata } });
+        hcp_modo:d.hcp_modo, porcentaje:d.porcentaje, pts_gana:d.pts_gana, pts_empata:d.pts_empata, ld_hoyo:d.ld_hoyo || "", ba_hoyo:d.ba_hoyo || "" } });
     case "crearSesion": return rpc("crear_sesion", { p_evento:d.evento_id, p_nombre:d.nombre, p_formato:d.formato, p_hoyos:+d.hoyos || 18 });
     case "crearMatch":  return rpc("crear_cruce", { p_sesion:d.sesion_id, p:{ bags_1:d.bags_1 || null, bags_2:d.bags_2 || null,
         resto_1:d.resto_1 || null, resto_2:d.resto_2 || null, hora:d.hora || "", nro:d.nro || null } });
@@ -1899,8 +1991,10 @@ async function apiSB(a, d = {}){
       const jugadores = js.map((j, i) => { const s = String(j), o = s.indexOf("INV:") === 0 ? { invitado:s.slice(4) } : { jugador_id:+s };
         o.lado = ls[i] || String(i + 1); if (hs[i] != null && hs[i] !== "") o.hcp = hs[i]; return o; });
       return rpc("crear_partida", { p:{ modalidad:d.modalidad, cancha_id:d.cancha_id, hcp_modo:d.hcp_modo, porcentaje:d.porcentaje,
-        p_bola:d.p_bola, p_suma:d.p_suma, dia:d.dia || "", jugadores } }); }
+        p_bola:d.p_bola, p_suma:d.p_suma, dia:d.dia || "", desempate:!!Number(d.desempate), ld_hoyo:d.ld_hoyo || "", ba_hoyo:d.ba_hoyo || "", jugadores } }); }
     case "amistoso":     { const r = await rpc("partida", { p_partida:d.partida_id }); return r.ok ? { ok:true, partida:armarPartida(r.partida) } : r; }
+    case "marcarPremio":  return rpc("marcar_premio", { p_juego:d.juego, p_tipo:d.tipo, p_jugador:d.jugador || "" });
+    case "premiosEvento": { const p = {}; ["ld_hoyo","ba_hoyo"].forEach(k => { if (k in d) p[k] = d[k]; }); return rpc("actualizar_evento", { p_evento:d.evento_id, p }); }
     case "amistososEnJuego": { const r = await rpc("partidas_en_juego"); return r.ok ? { ok:true, partidas:r.partidas.map(armarPartida) } : r; }
     case "misAmistosos": { const r = await rpc("mis_partidas", { p_jugador:+d.jugador_id }); return r.ok ? { ok:true, partidas:r.partidas.map(armarPartida) } : r; }
     case "cerrarAmistoso": {
@@ -2099,6 +2193,7 @@ function vistaArmar(){
   ${A.eventos.length?A.eventos.map(ficha).join(""):`<div class="aviso" style="margin-top:12px">Todavía no hay ningún evento creado.</div>`}
   <div class="err">${esc(S.err)}</div>`;
 }
+const selHoyo=(id,v,attr="")=>`<select id="${id}" ${attr}><option value="">No se juega</option>${[...Array(18)].map((_,i)=>`<option value="${i+1}" ${String(v)===String(i+1)?"selected":""}>Hoyo ${i+1}</option>`).join("")}</select>`;
 function vistaNuevoEvento(){
   const hoy=new Date().toISOString().slice(0,10);
   return `<button class="btn volver-vivo" id="volverEv">← Volver</button>
@@ -2113,6 +2208,7 @@ function vistaNuevoEvento(){
     <label class="f">Porcentaje del handicap</label><select id="apct">${PCTS.map(p=>`<option value="${p}">${p}\u00a0%${p===85?" (usual en match)":""}</option>`).join("")}</select>
     <div class="row2"><div><label class="f">Puntos al ganador</label><input type="text" id="ap" value="1"></div>
       <div><label class="f">Si empatan</label><input type="text" id="ae" value="0.5"></div></div>
+    <div class="row2"><div><label class="f">Long drive</label>${selHoyo("ald","")}</div><div><label class="f">Best approach</label>${selHoyo("aba","")}</div></div>
     ${S.cat.config&&S.cat.config.ryder_ganado!=null&&S.cat.config.ryder_ganado!==""?`<div class="small muted" style="margin-top:6px">Reglamento del Tour (hoja CONFIG): ganado ${esc(S.cat.config.ryder_ganado)} · empate ${esc(S.cat.config.ryder_empate)} · rival ausente ${esc(S.cat.config.ryder_rival_ausente)}</div>`:""}
     <button class="btn" id="crear">Crear y seguir armando →</button>
     <div class="err">${esc(S.err)}</div></div>`;
@@ -2127,9 +2223,10 @@ function vistaEditarEvento(){
   ${cerrado?"":`<div class="card"><h3>Handicap del evento</h3>
     <div class="pcts">${PCTS.map(p=>`<button data-epct="${p}" class="${pctN(A.evento.porcentaje)===p?"on":""}">${p}\u00a0%</button>`).join("")}</div>
     <div class="pcts">${[["DIFERENCIA","Llevar a 0"],["COMPLETO","Completo"]].map(([k,t])=>`<button data-emodo="${k}" class="${(A.evento.hcp_modo||"DIFERENCIA")===k?"on":""}">${t}</button>`).join("")}</div>
-    <div class="small muted">Se aplica a todos los cruces, también a los que ya empezaron. Para cambiar el handicap de un jugador, tocá su <b>hcp</b> en el cruce.</div></div>`}
+    <div class="small muted">Se aplica a todos los cruces, también a los que ya empezaron. Para cambiar el handicap de un jugador, tocá su <b>hcp</b> en el cruce.</div>
+    <div class="row2" style="margin-top:10px"><div><label class="f">Long drive</label>${selHoyo("eld",A.evento.ld_hoyo||"","data-epr=\"ld_hoyo\"")}</div><div><label class="f">Best approach</label>${selHoyo("eba",A.evento.ba_hoyo||"","data-epr=\"ba_hoyo\"")}</div></div></div>`}
   ${A.sesiones.map((s,i)=>`<div class="card ses">
-    <div class="shead"><div><b>${esc(s.nombre)}</b><span class="pill">${FORMATOS[s.formato]}</span></div><span class="muted small">${s.matches.length} cruce${s.matches.length===1?"":"s"}</span></div>
+    <div class="shead"><div><b>${esc(s.nombre)}</b>${(FORMATOS[s.formato]||"").toLowerCase().startsWith(String(s.nombre).toLowerCase().trim())?"":`<span class="pill">${FORMATOS[s.formato]}</span>`}</div><span class="muted small">${s.matches.length} cruce${s.matches.length===1?"":"s"}</span></div>
     ${s.matches.length?s.matches.map((m,k)=>`<div class="cruce">
         <span class="nro">${k+1}</span>
         ${(()=>{ const gc=golpesCruce(m.bags,m.resto,s.formato);
@@ -2210,7 +2307,7 @@ function vistaJugar(){
   const card=(id,ic,t,d,tag)=>`<button class="jcard" id="${id}" ${tag?"disabled":""}><span class="ic">${ic}</span><div><b>${t}${tag?`<span class="tag">${tag}</span>`:""}</b><span>${d}</span></div><i>›</i></button>`;
   return `<h1>Jugar</h1><p class="lead">Armá la partida y seguila en <b>Vivo</b>, donde se cargan los golpes.</p>
   <div class="jugar-grid">
-    ${card("jAm",ICO.golfista,"Amistoso","Match, 4-2-0 o fourball, con invitados y el handicap que elijan.")}
+    ${card("jAm",ICO.golfista,"Amistoso","Match, 4-2-0, fourball o stableford, con invitados y el handicap que elijan.")}
     ${admin?card("jRy",ICO.copa,"Ryder Cup","Bags Boys contra Resto del Mundo: sesiones, cruces, salidas y handicaps."):""}
     ${admin?card("jFe",ICO.bandera,"Fecha del Chaqueta","Medal por neto con los puntos del Tour, cargada en vivo.","Próximamente"):""}
   </div>
@@ -2218,21 +2315,65 @@ function vistaJugar(){
 }
 function ligarJugar(){
   const am=document.getElementById("jAm");
-  if(am) am.onclick=()=>{ AM.nueva=true; AM.act=null; AM.sel=[String(S.ses.jugador.id)]; AM.hcpEd={}; AM.pct=100; AM.hcp_modo="DIFERENCIA"; AM.canchaNueva=false; S.err=""; location.hash="#/amistosos"; };
+  if(am) am.onclick=()=>{ AM.nueva=true; AM.act=null; AM.ld=""; AM.ba=""; AM.desempate=false; AM.sel=[String(S.ses.jugador.id)]; AM.hcpEd={}; AM.pct=100; AM.hcp_modo="DIFERENCIA"; AM.canchaNueva=false; S.err=""; location.hash="#/amistosos"; };
   const ry=document.getElementById("jRy");
   if(ry) ry.onclick=()=>{ S.err=""; location.hash="#/armar"; };
+}
+/* stableford neto de cada jugador, como dato extra */
+function stbTotal(golpes,rep,par){ let t=0; golpes.forEach((g,h)=>{ if(g!=null) t+=Math.max(0,2+Number(par[h])-(g-((rep||[])[h]||0))); }); return t; }
+function lineaStb(filas,par){
+  if(!filas.some(f=>f.golpes.some(g=>g!=null))) return "";
+  return `<div class="stb">Stableford neto · ${filas.map(f=>`<span class="${f.cls||""}">${esc(f.nombre)} <b>${stbTotal(f.golpes,f.rep,par)}</b></span>`).join(" · ")}</div>`;
+}
+/* encabezado del match estilo tarjeta de golf */
+function hdrMatch(o){
+  const side=k=>{ const L=o[k], lid=o.lider===k;
+    const rs=lid?`<div class="rs"><b>${esc(o.res)}</b><span>${esc(o.est)}</span></div>`:"";
+    return `<div class="ms ${k==="B"?"der":""} ${lid?"lid f-"+L.col:"c-"+L.col}">${k==="B"?rs:""}<div class="who">${L.ids.map(j=>`<div class="nm">${esc(L.nombre(j))}</div>`).join("")}<div class="hc">${L.sub||""}</div></div>${k==="A"?rs:""}</div>`; };
+  return `<div class="mh2 ${o.lider==="A"?"la":o.lider==="B"?"lb":""}">${side("A")}${side("B")}${o.lider?"":`<div class="mh2-par"><b>${esc(o.res)}</b><span>${esc(o.est)}</span></div>`}</div>`;
+}
+const TIPO_PREMIO={LD:"LONG DRIVE",BA:"BEST APPROACH"};
+/* último marcado de cada premio */
+function premiosDe(lista){ const o={}; (lista||[]).forEach(r=>o[r.tipo]=r); return o; }
+function premiosHoyo(j,h){ return ["LD","BA"].filter(t=>Number(j[t==="LD"?"ld_hoyo":"ba_hoyo"])===h); }
+function lineaPremios(j,nombre){
+  const pr=premiosDe(j.premios), t=["LD","BA"].filter(k=>j[k==="LD"?"ld_hoyo":"ba_hoyo"]);
+  if(!t.length) return "";
+  return `<div class="premios-linea">${t.map(k=>`${k==="LD"?"Long drive":"Best approach"} (hoyo ${j[k==="LD"?"ld_hoyo":"ba_hoyo"]}): ${pr[k]?`va ganando <b>${esc(nombre(pr[k].j))}</b>`:"sin marcar"}`).join(" · ")}</div>`;
+}
+function vistaHojaPremio(){
+  const P=S.premioPend; if(!P) return "";
+  const tipo=P.tipos[P.i], lider=(premiosDe(P.premios())[tipo]||{}).j;
+  return `<div class="hoja" role="dialog" aria-modal="true"><div class="caja">
+    <h3>${TIPO_PREMIO[tipo]} · hoyo ${P.hoyo}</h3>
+    <p>${lider?`Va ganando <b>${esc(P.nombre(lider))}</b>. ¿Alguien de la línea lo superó?`:"¿Quién de la línea va ganando?"}</p>
+    <div class="ops">${P.jug.map(j=>`<button data-prem="${esc(j)}" class="${j===lider?"lider":""}">${P.av(j)}<span>${esc(P.nombre(j))}${j===lider?" · va ganando":""}</span></button>`).join("")}
+      <button class="nadie" data-prem="">${lider?"Nadie lo superó":"Nadie / no se marcó"}</button></div>
+    <div class="err">${esc(P.err||"")}</div></div></div>`;
+}
+function ligarHojaPremio(){
+  const P=S.premioPend; if(!P) return;
+  document.querySelectorAll("[data-prem]").forEach(b=>b.onclick=async()=>{
+    const jug=b.dataset.prem, tipo=P.tipos[P.i];
+    if(jug){ document.querySelectorAll("[data-prem]").forEach(x=>x.disabled=true);
+      const r=await api("marcarPremio",{juego:P.mid,tipo,jugador:jug},"POST");
+      if(!r.ok){ P.err=r.red?"Sin señal: probá de nuevo en un momento":r.error; pintar(); return; } }
+    P.err=""; P.i++;
+    if(P.i>=P.tipos.length){ S.premioPend=null; P.listo(); }
+    pintar(); });
 }
 /* una fila de amistoso (Vivo y perfil) */
 function filaAm(p){
   const J=p.jugadores.map(j=>j.id), fin=p.estado==="CERRADA"?"fin":"";
   const lid = !p.lider ? "" : (p.modalidad==="FOURBALL" ? (p.lider==="A"?"b":"o") : colAm(p,p.lider));
   const sub=`${MODAL[p.modalidad]} · ${esc(p.cancha.nombre||"")}${p.jugados&&p.estado!=="CERRADA"?` · hoyo ${p.jugados}`:""}${p.estado==="CERRADA"?" · terminada":""}`;
-  if(p.modalidad==="P420") return `<div class="mrow am am3" data-p="${p.partida_id}">
+  if(p.modalidad==="P420"||p.modalidad==="STABLEFORD") return `<div class="mrow am am3" data-p="${p.partida_id}">
     <div class="lado"><div class="pj">${grupoAv(J,avAm,"sm")}<div class="nm nm3">${J.map(j=>`<span class="c-${colAm(p,j)}">${esc(nomAm(j))}</span>`).join('<span class="vs">·</span>')}</div></div></div>
     <span class="est ${lid} ${fin}">${esc(p.resumen||"—")}</span><div class="sub">${sub}</div></div>`;
   const A=p.jugadores.filter(j=>colAm(p,j.id)==="b").map(j=>j.id), B=p.jugadores.filter(j=>colAm(p,j.id)==="o").map(j=>j.id);
   const ld=(l,c,r)=>`<div class="lado ${r?"r":""}">${ladoFila(l,{nombre:nomAm,av:avAm,cls:"c-"+c,r})}</div>`;
-  return `<div class="mrow am" data-p="${p.partida_id}">${ld(A,"b",false)}
+  const lidK=(p.modalidad==="MATCH"||p.modalidad==="FOURBALL")&&p.lider&&p.jugados ? (colAm(p,p.lider==="A"?A[0]:p.lider==="B"?B[0]:p.lider)==="b"?"lidA f-b":"lidB f-o") : "";
+  return `<div class="mrow am ${lidK}" data-p="${p.partida_id}">${ld(A,"b",false)}
     <span class="est ${lid} ${fin}">${esc(p.resumen||"—")}</span>${ld(B,"o",true)}<div class="sub">${sub}</div></div>`;
 }
 function vistaVivoTodo(){
@@ -2251,7 +2392,10 @@ function vistaVivo(){
   if(!e||!e.evento) return `<h1>Todavía no hay nada en juego</h1>
     <p class="lead">Cuando el administrador arme la Ryder o una fecha, vas a verla acá en vivo.</p>
     <a class="btn sec" style="display:block;text-align:center;text-decoration:none;padding:14px" href="${HIST}">Ver las estadísticas históricas</a>`;
-  const B=e.marcador.bags, R=e.marcador.resto, tot=Math.max(B+R,0.001);
+  /* así va: los cerrados con sus puntos, y cada match en juego suma para el que lo va ganando */
+  const pg=Number(e.evento.pts_gana)||1; let B=0,R=0, vivos=0;
+  e.matches.forEach(m=>{ if(m.cerrado){ B+=m.puntos.bags; R+=m.puntos.resto; } else if(m.jugados){ vivos++; if(m.estado>0) B+=pg; else if(m.estado<0) R+=pg; } });
+  const tot=Math.max(B+R,0.001);
   const porSes={};
   e.matches.forEach(m=>{ (porSes[m.sesion_id]=porSes[m.sesion_id]||[]).push(m); });
   return `
@@ -2259,7 +2403,9 @@ function vistaVivo(){
     <div class="n"><span class="b">${B}</span> <span class="muted" style="font-size:.45em">a</span> <span class="r">${R}</span></div>
     <div class="eq"><span class="b">Bags Boys</span><span class="r">Resto del Mundo</span></div>
     <div class="barra"><i class="b" style="width:${B/tot*100}%"></i><i class="r" style="width:${R/tot*100}%"></i></div>
+    ${vivos?`<div class="small muted" style="margin-top:6px">Así va: cada match en juego suma para el que lo va ganando · definidos ${fmt(e.marcador.bags)} a ${fmt(e.marcador.resto)}</div>`:""}
     <div class="small muted" style="margin-top:8px">${esc(e.evento.nombre)} · ${esc(e.cancha.nombre||"")}${e.cancha.recorrido?" "+esc(e.cancha.recorrido):""}</div>
+    ${lineaPremios(Object.assign({premios:e.premios},e.evento),nom)}
   </div>
   ${frescura()}
   ${e.otros_en_juego&&S.ses.jugador.rol==="admin"?`<div class="aviso rojo">Hay ${e.otros_en_juego} evento(s) más en juego que no se ven acá. Cerrá o pasá a borrador el que no corresponda.</div>`:""}
@@ -2269,7 +2415,7 @@ function vistaVivo(){
     const fN=FORMATOS[s.formato]||s.formato, rep=fN.toLowerCase().startsWith(String(s.nombre).toLowerCase().trim());
     return `<div class="sec-h"><span class="f">${esc(s.nombre)}</span>${rep?"":`<span class="pill">${fN}</span>`}</div>
     <div class="card">${ms.map(m=>{ const st=estadoTxt(m);
-      return `<div class="mrow" data-m="${m.match_id}">
+      return `<div class="mrow ${m.jugados&&m.estado>0?"lidA f-b":m.jugados&&m.estado<0?"lidB f-r":""}" data-m="${m.match_id}">
         <div class="lado">${ladoFila(m.bags,{nombre:nom,av:avatar,extra:m.hora?esc(m.hora):""})}</div>
         <span class="est ${st.c}">${st.t}</span>
         <div class="lado r">${ladoFila(m.resto,{nombre:nom,av:avatar,r:true,extra:m.jugados?("hoyo "+m.jugados):""})}</div>
@@ -2317,6 +2463,7 @@ function vistaMatch(){
   const cerradoEv = e.evento.estado==="CERRADO";
   const carga = !puedo ? `<div class="aviso">Solo los jugadores de este cruce (o el administrador) pueden cargar golpes.</div>`
     : (cerradoEv ? "" : bloqueCarga({mid:m.match_id, jug:jug.map(String), hoyo:S.hoyo, par, guardado:(j,i)=>(tarS[String(j)]||[])[i],
+        premiosEn:h=>premiosHoyo(e.evento,h), premios:()=>e.premios,
         nombre:nombreLado, avatarDe:j=>avatar(j), color:j=>m.bags.map(String).includes(String(j))?"b":"r", recibe:j=>(m.golpes_de||{})[String(j)]||0,
         golpeEn:(j,i)=>((m.recibe_hoyo||{})[String(j)]||[])[i]||0,
         hechoHoyo:i=>jug.every(j=>(tarS[String(j)]||[])[i]!=null)}));
@@ -2324,12 +2471,10 @@ function vistaMatch(){
   const pctM=pctN(m.porcentaje);
   const hcpInfo=`<div class="small muted" style="margin:0 0 10px">Golpes${pctM!==100?" al "+pctM+"\u00a0%":""}${e.evento.hcp_modo==="COMPLETO"?" (handicap completo)":""}: ${jug.map(j=>esc(nombreLado(j))+" <b>"+((m.golpes_de||{})[String(j)]||0)+"</b>").join(" · ")}${S.ses.jugador.rol==="admin"&&!cerradoEv?` · <a class="lk" id="hcpArmar" style="cursor:pointer">✎ cambiar</a>`:""}</div>`;
   return `<button class="btn volver-vivo" id="volverV">‹ Vivo</button>
-  <div class="mhead"><div class="mh">
-    ${ladoHdr(m.bags,{lado:"b",nombre:nom,av:avatar,todos:m.bags.concat(m.resto),cls:"c-b",sub:"Bags Boys"})}
-    <div class="res"><b>${st.t}</b><span>${m.cerrado?"final":(m.jugados?"hoyo "+m.jugados:"por salir")}</span></div>
-    ${ladoHdr(m.resto,{lado:"r",nombre:nom,av:avatar,todos:m.bags.concat(m.resto),cls:"c-r",sub:"Resto del Mundo"})}
+  <div class="mhead">${hdrMatch({A:{ids:m.bags,nombre:nom,col:"b",sub:"Bags Boys"},B:{ids:m.resto,nombre:nom,col:"r",sub:"Resto del Mundo"},
+      lider:m.jugados&&m.estado>0?"A":m.jugados&&m.estado<0?"B":"", res:st.t, est:m.cerrado?"final":(m.jugados?"hoyo "+m.jugados:"por salir")})}<div style="display:none">
   </div></div>
-  ${selSalida}${falta}${aviso}${tramo(1,9)}${tramo(10,18)}${leyenda(pk.size>0)}
+  ${selSalida}${falta}${aviso}${tramo(1,9)}${tramo(10,18)}${leyenda(pk.size>0)}${m.una_bola?"":lineaStb(jug.map(j=>({nombre:nombreLado(j),golpes:tar[String(j)]||[],rep:(m.recibe_hoyo||{})[String(j)],cls:m.bags.map(String).includes(String(j))?"c-b":"c-r"})),par)}
   ${hcpInfo}${carga}`;
 }
 
@@ -2343,6 +2488,11 @@ async function fijarHcpEv(j,v){
   return true;
 }
 function ligarHcpArmar(){
+  document.querySelectorAll("[data-epr]").forEach(sel=>sel.onchange=async()=>{
+    const campo=sel.dataset.epr, x=await api("premiosEvento",{evento_id:A.evento.evento_id,[campo]:sel.value},"POST");
+    if(!x.ok){ S.err=x.error; pintar(); return; }
+    A.evento[campo]=sel.value?+sel.value:null; S.err="";
+    if(S.est&&S.est.evento&&S.est.evento.evento_id===A.evento.evento_id) refrescar(true); });
   document.querySelectorAll("[data-epct],[data-emodo]").forEach(b=>b.onclick=async()=>{
     const ev=A.evento; document.querySelectorAll("[data-epct],[data-emodo]").forEach(x=>x.disabled=true);
     const pc=b.dataset.epct?+b.dataset.epct:pctN(ev.porcentaje), md=b.dataset.emodo||ev.hcp_modo||"DIFERENCIA";
@@ -2387,10 +2537,10 @@ function ligarArmar(){
     const nombre=document.getElementById("an").value.trim(), cid=document.getElementById("ac").value;
     c.disabled=true; c.textContent="Creando…";
     const r=await api("crearEvento",{token:tok(),temporada:new Date().getFullYear(),tipo:"RYDER",nombre,
-      dia:document.getElementById("ad").value,cancha_id:cid,hcp_modo:document.getElementById("ah").value,porcentaje:document.getElementById("apct").value,
+      dia:document.getElementById("ad").value,cancha_id:cid,hcp_modo:document.getElementById("ah").value,porcentaje:document.getElementById("apct").value,ld_hoyo:document.getElementById("ald").value,ba_hoyo:document.getElementById("aba").value,
       pts_gana:document.getElementById("ap").value,pts_empata:document.getElementById("ae").value},"POST");
     if(!r.ok){ S.err=r.error; c.disabled=false; pintar(); return; }
-    ["an","ad","ac","ah","apct","ap","ae"].forEach(k=>delete S.form[k]);
+    ["an","ad","ac","ah","apct","ap","ae","ald","aba"].forEach(k=>delete S.form[k]);
     A.nuevo=false; await abrirEvento(r.evento_id);
   };
   const a=document.getElementById("addses");
@@ -2547,7 +2697,9 @@ const nomAm = j => esInv(j) ? String(j).slice(4) : nom(+j);
 function avAm(j,cls=""){ if(!esInv(j)) return av(+j,cls,true);
   const n=String(j).slice(4).trim().split(" "); const ini=((n[0]||"?")[0]+(n[1]?n[1][0]:"")).toUpperCase();
   return `<span class="av ${cls} ini inv">${ini}</span>`; }
-const MODAL={MATCH:"Match 1 vs 1",P420:"4-2-0 (tres jugadores)",FOURBALL:"Fourball 2 vs 2"};
+const MODAL={MATCH:"Match 1 vs 1",P420:"4-2-0 (tres jugadores)",FOURBALL:"Fourball 2 vs 2",STABLEFORD:"Stableford (2 a 4 jugadores)"};
+const cupoAm=m=>m==="MATCH"?2:m==="P420"?3:4;
+const listoAm=()=>AM.modalidad==="STABLEFORD"?AM.sel.length>=2:AM.sel.length===cupoAm(AM.modalidad);
 let AM={pct:100, hcpEd:{}, editH:false, ed:null, hcpInv:{}, lista:null, nueva:false, sel:[], lados:{}, modalidad:"MATCH", cancha:"", hcp_modo:"DIFERENCIA", p_bola:1, p_suma:0, act:null, hoyo:1, canchaNueva:false, par:Array(18).fill(4), idx:Array(18).fill("")};
 
 /* nombre corto para parejas: "Mato & Fran" (si dos se llaman igual, va el nombre completo) */
@@ -2569,7 +2721,7 @@ function ladoHdr(ids,o){
 function colAm(p,id){
   const J=p.jugadores, i=J.findIndex(j=>String(j.id)===String(id));
   if(p.modalidad==="FOURBALL") return (J[i]||{}).lado==="A"?"b":"o";
-  return ["b","o","y"][i]||"b";
+  return ["b","o","y","v"][i]||"b";
 }
 function baseAm(){ const b={}, h=(S.cat&&S.cat.hcp)||{};
   AM.sel.forEach(j=>b[j]=AM.hcpEd[j]!=null?AM.hcpEd[j]:(esInv(j)?(AM.hcpInv[j]||0):(h[String(j)]||0))); return b; }
@@ -2595,12 +2747,13 @@ function vistaAmistosos(){
     const J=p.jugadores.map(j=>j.id), fin=p.estado==="CERRADA"?"fin":"";
     const lid = !p.lider ? "" : (p.modalidad==="FOURBALL" ? (p.lider==="A"?"b":"o") : colAm(p,p.lider));
     const sub=`${MODAL[p.modalidad]} · ${esc(p.cancha.nombre||"")}${p.jugados&&p.estado!=="CERRADA"?` · hoyo ${p.jugados}`:""}${p.estado==="CERRADA"?" · terminada":""}`;
-    if(p.modalidad==="P420") return `<div class="mrow am am3" data-p="${p.partida_id}">
+    if(p.modalidad==="P420"||p.modalidad==="STABLEFORD") return `<div class="mrow am am3" data-p="${p.partida_id}">
       <div class="lado"><div class="pj">${grupoAv(J,avAm,"sm")}<div class="nm nm3">${J.map(j=>`<span class="c-${colAm(p,j)}">${esc(nomAm(j))}</span>`).join('<span class="vs">·</span>')}</div></div></div>
       <span class="est ${lid} ${fin}">${esc(p.resumen||"—")}</span><div class="sub">${sub}</div></div>`;
     const A=p.jugadores.filter(j=>colAm(p,j.id)==="b").map(j=>j.id), B=p.jugadores.filter(j=>colAm(p,j.id)==="o").map(j=>j.id);
     const ld=(l,c,r)=>`<div class="lado ${r?"r":""}">${ladoFila(l,{nombre:nomAm,av:avAm,cls:"c-"+c,r})}</div>`;
-    return `<div class="mrow am" data-p="${p.partida_id}">${ld(A,"b",false)}
+    const lidK=(p.modalidad==="MATCH"||p.modalidad==="FOURBALL")&&p.lider&&p.jugados ? (colAm(p,p.lider==="A"?A[0]:p.lider==="B"?B[0]:p.lider)==="b"?"lidA f-b":"lidB f-o") : "";
+  return `<div class="mrow am ${lidK}" data-p="${p.partida_id}">${ld(A,"b",false)}
       <span class="est ${lid} ${fin}">${esc(p.resumen||"—")}</span>${ld(B,"o",true)}<div class="sub">${sub}</div></div>`;
   };
 
@@ -2632,7 +2785,7 @@ function vistaCanchaNueva(){
 function vistaNuevoAm(){
   if(AM.canchaNueva) return vistaCanchaNueva();
   const hcp=(S.cat&&S.cat.hcp)||{};
-  const cupo = AM.modalidad==="MATCH"?2:AM.modalidad==="P420"?3:4;
+  const cupo = cupoAm(AM.modalidad);
   const jug=[...(S.cat?S.cat.jugadores:[])].sort((a,b)=>(hcp[String(a.id)]??99)-(hcp[String(b.id)]??99));
   const elegidos=AM.sel.map(j=>esc(nomAm(j)));
   return `<button class="btn volver-vivo" id="cancelAm">‹ Jugar</button>
@@ -2642,8 +2795,11 @@ function vistaNuevoAm(){
     <label class="f">Cancha</label>
     <select id="acan">${(S.cat?S.cat.canchas:[]).map(c=>`<option value="${c.id}" ${String(AM.cancha)===String(c.id)?"selected":""}>${esc(c.nombre)}${c.recorrido?" · "+esc(c.recorrido):""}</option>`).join("")}
       <option value="NUEVA">+ Agregar una cancha nueva…</option></select>
+    <div class="row2"><div><label class="f">Long drive</label>${selHoyo("amld",AM.ld||"")}</div><div><label class="f">Best approach</label>${selHoyo("amba",AM.ba||"")}</div></div>
     ${AM.modalidad==="FOURBALL"?`<div class="row2"><div><label class="f">Puntos por mejor bola</label><input type="text" id="apb" value="${AM.p_bola}"></div>
       <div><label class="f">Puntos por suma de la pareja</label><input type="text" id="aps" value="${AM.p_suma}"></div></div>
+      <label class="chk"><input type="checkbox" id="adesemp" ${AM.desempate?"checked":""}> Desempata la 2da pelota</label>
+      <div class="small muted">Si empata la mejor pelota, gana el hoyo la pareja con mejor segunda pelota. Si empatan, nadie suma.</div>
       <div class="small muted">Poné 0 en la suma si juegan solo mejor bola.</div>`:""}
   </div>
   <div class="card"><h3>Jugadores <span class="pill">${AM.sel.length} de ${cupo}</span></h3>
@@ -2657,7 +2813,7 @@ function vistaNuevoAm(){
   </div>
   ${AM.sel.length>=2?`<div class="card"><h3>Handicaps de juego</h3><p class="small muted" style="margin:0 0 4px">Tocá el número para escribirlo. Se pueden cambiar también durante la partida.</p>
     ${editorHcp({ids:AM.sel,base:baseAm(),pct:AM.pct,modo:AM.hcp_modo,idx:canAm().idx,nombre:nomAm,pref:"n"})}</div>`:""}
-  <button class="btn" id="crearAm" ${AM.sel.length===cupo?"":"disabled"}>Empezar la partida</button>
+  <button class="btn" id="crearAm" ${listoAm()?"":"disabled"}>Empezar la partida</button>
   <div class="err">${esc(S.err)}</div>`;
 }
 function vistaAmistoso(){
@@ -2670,12 +2826,15 @@ function vistaAmistoso(){
   const golpesTxt=l=>l.map(j=>j.recibe).every(x=>x===0)?"sin golpes":(l.length===1?`recibe ${l[0].recibe} golpe${l[0].recibe===1?"":"s"}`:"reciben "+l.map(j=>j.recibe).join(" y "));
   const stc=p.lider?(" "+colAm(p,p.lider==="A"?(J.find(j=>j.lado==="A")||{}).id:(p.lider==="B"?(J.find(j=>j.lado==="B")||{}).id:p.lider))):"";
   const tot=j=>j.golpes.filter(x=>x!=null).reduce((a,b)=>a+b,0);
-  const marcador = p.modalidad==="P420"
-    ? `<div class="p420">${J.slice().sort((a,b)=>(p.puntos[b.id]||0)-(p.puntos[a.id]||0)).map((j,i,arr)=>`<div class="p4 ${cl(j)} ${i===0&&(p.puntos[j.id]||0)>(p.puntos[(arr[1]||{}).id]||0)?"lider":""}"><div>${avAm(j.id)}<b>${esc(nomAm(j.id))}</b></div><span>${p.puntos[j.id]||0}</span></div>`).join("")}
-       <div class="small muted" style="text-align:center">${p.jugados?("hoyo "+p.jugados):"por salir"} · 6 puntos por hoyo</div></div>`
-    : `<div class="mh">${ladoHdr(ladoA.map(j=>j.id),{lado:"b",nombre:nomAm,av:avAm,todos:ids,cls:"c-b",sub:golpesTxt(ladoA)})}
-       <div class="res"><b class="${stc.trim()?"c-"+stc.trim():""}">${esc(p.resumen)}</b><span>${p.estado==="CERRADA"||p.cerrado?"final":(p.jugados?("hoyo "+p.jugados):"por salir")}</span></div>
-       ${ladoHdr(ladoB.map(j=>j.id),{lado:"o",nombre:nomAm,av:avAm,todos:ids,cls:"c-o",sub:golpesTxt(ladoB)})}</div>`;
+  const minP=Math.min(...J.map(j=>p.puntos[j.id]||0));
+  const ladoDe=k=>k==="A"?ladoA:ladoB;
+  const lidAm=!p.jugados?"":(p.modalidad==="FOURBALL"?p.lider:(p.lider===(ladoA[0]||{}).id?"A":p.lider===(ladoB[0]||{}).id?"B":""));
+  const lista3 = p.modalidad==="P420"||p.modalidad==="STABLEFORD";
+  const marcador = lista3
+    ? `<div class="p420">${J.slice().sort((a,b)=>(p.puntos[b.id]||0)-(p.puntos[a.id]||0)).map((j,i,arr)=>`<div class="p4 ${cl(j)} ${i===0&&(p.puntos[j.id]||0)>(p.puntos[(arr[1]||{}).id]||0)?"lider":""}"><div>${avAm(j.id)}<b>${esc(nomAm(j.id))}</b></div><span>${p.puntos[j.id]||0}${p.modalidad==="P420"?`<small>(${(p.puntos[j.id]||0)-minP})</small>`:""}</span></div>`).join("")}
+       <div class="small muted" style="text-align:center">${p.jugados?("hoyo "+p.jugados):"por salir"} · ${p.modalidad==="P420"?"6 puntos por hoyo · entre paréntesis, la diferencia con el último":"puntos stableford neto"}</div></div>`
+    : hdrMatch({A:{ids:ladoA.map(j=>j.id),nombre:nomAm,col:"b",sub:golpesTxt(ladoA)},B:{ids:ladoB.map(j=>j.id),nombre:nomAm,col:"o",sub:golpesTxt(ladoB)},
+        lider:lidAm, res:p.resumen, est:p.estado==="CERRADA"||p.cerrado?"final":(p.jugados?("hoyo "+p.jugados):"por salir")});
   const tramo=(d,h)=>`<div class="tw"><table class="tarjeta"><thead>
     <tr><th class="l">Hoyo</th>${[...Array(h-d+1)].map((_,i)=>`<th>${d+i}</th>`).join("")}<th>${d===1?"Ida":"Vta"}</th></tr>
     <tr><th class="l">Par</th>${[...Array(h-d+1)].map((_,i)=>`<th>${par[d-1+i]}</th>`).join("")}<th>${par.slice(d-1,h).reduce((a,b)=>a+b,0)}</th></tr></thead><tbody>
@@ -2697,14 +2856,16 @@ function vistaAmistoso(){
     : `<button class="btn sec" id="editH" style="margin:4px 0 10px">✎ Golpes: ${p.jugadores.map(j=>esc(nomAm(j.id))+" "+j.recibe).join(" · ")}${pctN(p.porcentaje)!==100?" ("+pctN(p.porcentaje)+" %)":""}</button>`);
   const carga = !puedo?`<div class="aviso">Solo los que juegan esta partida pueden cargar golpes.</div>`
     : (p.estado==="CERRADA" ? "" : bloqueCarga({mid:p.partida_id, jug:p.jugadores.map(j=>j.id), hoyo:AM.hoyo, par,
-        guardado:(id,i)=>(p.jugadores.find(x=>x.id===id)||{golpes:[]}).golpes[i], nombre:nomAm, avatarDe:id=>avAm(id), color:id=>colAm(p,id),
+        guardado:(id,i)=>(p.jugadores.find(x=>x.id===id)||{golpes:[]}).golpes[i], nombre:nomAm, avatarDe:id=>avAm(id),
+        premiosEn:h=>premiosHoyo(p,h), premios:()=>p.premios, color:id=>colAm(p,id),
         recibe:id=>(p.jugadores.find(x=>x.id===id)||{}).recibe||0, golpeEn:(id,i)=>((p.jugadores.find(x=>x.id===id)||{}).rep||[])[i]||0, hechoHoyo:i=>p.jugadores.every(j=>j.golpes[i]!=null)}));
   return `<button class="btn volver-vivo" id="volverAm">‹ Vivo</button>
   <h1>${MODAL[p.modalidad]}</h1>
-  <p class="lead">${esc(p.cancha.nombre||"")}${p.cancha.recorrido?" "+esc(p.cancha.recorrido):""} · golpes ${p.hcp_modo==="DIFERENCIA"?"por diferencia":"completos"}${pctN(p.porcentaje)!==100?" al "+pctN(p.porcentaje)+"\u00a0%":""}${p.modalidad==="FOURBALL"?` · mejor bola ${p.p_bola}${p.p_suma?` y suma ${p.p_suma}`:""}`:""}</p>
+  <p class="lead">${esc(p.cancha.nombre||"")}${p.cancha.recorrido?" "+esc(p.cancha.recorrido):""} · golpes ${p.hcp_modo==="DIFERENCIA"?"por diferencia":"completos"}${pctN(p.porcentaje)!==100?" al "+pctN(p.porcentaje)+"\u00a0%":""}${p.modalidad==="FOURBALL"?` · mejor bola ${p.p_bola}${p.p_suma?` y suma ${p.p_suma}`:""}${p.desempate?" · desempata la 2da pelota":""}`:""}</p>
+  ${lineaPremios(p,nomAm)}
   <div class="mhead">${marcador}</div>
   ${p.falta_hoyo?`<div class="aviso rojo">Falta cargar el hoyo ${p.falta_hoyo}: el match se cuenta hasta ahí.</div>`:""}
-  ${tramo(1,9)}${tramo(10,18)}${leyenda(pkA.size>0)}
+  ${tramo(1,9)}${tramo(10,18)}${leyenda(pkA.size>0)}${p.modalidad==="STABLEFORD"?"":lineaStb(J.map(j=>({nombre:nomAm(j.id),golpes:j.golpes,rep:j.rep,cls:"c-"+cl(j)})),par)}
   ${editAm}
   ${carga}
   ${p.estado==="CERRADA"?`<div class="aviso">Partida terminada y guardada: ${esc(p.resumen)}</div>`:""}
@@ -2715,6 +2876,9 @@ function vistaAmistoso(){
 }
 function ligarAmistosos(){
   const n=document.getElementById("nuevaAm");
+  const amld=document.getElementById("amld"); if(amld) amld.onchange=()=>{ AM.ld=amld.value; };
+  const amba=document.getElementById("amba"); if(amba) amba.onchange=()=>{ AM.ba=amba.value; };
+  const ades=document.getElementById("adesemp"); if(ades) ades.onchange=()=>{ AM.desempate=ades.checked; };
   if(n) n.onclick=()=>{ AM.nueva=true; AM.sel=[String(S.ses.jugador.id)]; AM.hcpEd={}; AM.pct=100; AM.hcp_modo="DIFERENCIA"; S.err=""; pintar(); };
   ligarEditor("n",{pct:v=>AM.pct=v, modo:v=>AM.hcp_modo=v, get:j=>baseAm()[j], set:(j,v)=>AM.hcpEd[j]=v, nombre:nomAm});
   document.querySelectorAll(".mrow.am[data-p],[data-irp]").forEach(r=>r.onclick=()=>{ location.hash="#/partida/"+(r.dataset.p||r.dataset.irp); });
@@ -2737,11 +2901,11 @@ function ligarAmistosos(){
     S.err=r.existia?"Esa cancha ya estaba cargada: la dejamos seleccionada":(r.estimado?"Cancha guardada. Los índices se estimaron por el par: corregilos en la hoja CANCHAS cuando los tengas":""); pintar();
   };
   ["amod","acan","ahm","apb","aps"].forEach(id=>{ const e=document.getElementById(id); if(!e) return;
-    e.onchange=()=>{ if(id==="amod"){ AM.modalidad=e.value; AM.sel=[String(S.ses.jugador.id)]; } if(id==="acan"){ if(e.value==="NUEVA"){ AM.canchaNueva=true; S.err=""; pintar(); return; } AM.cancha=e.value; }
+    e.onchange=()=>{ if(id==="amod"){ AM.modalidad=e.value; AM.sel=[String(S.ses.jugador.id)]; if(e.value==="STABLEFORD"){ AM.hcp_modo="COMPLETO"; AM.pct=100; } } if(id==="acan"){ if(e.value==="NUEVA"){ AM.canchaNueva=true; S.err=""; pintar(); return; } AM.cancha=e.value; }
       if(id==="ahm") AM.hcp_modo=e.value; if(id==="apb") AM.p_bola=+e.value||0; if(id==="aps") AM.p_suma=+e.value||0; pintar(); }; });
   const ai=document.getElementById("addInv");
   if(ai) ai.onclick=()=>{
-    const cupo=AM.modalidad==="MATCH"?2:AM.modalidad==="P420"?3:4;
+    const cupo=cupoAm(AM.modalidad);
     if(AM.sel.length>=cupo){ S.err="Ya están todos los jugadores; sacá a alguno primero"; pintar(); return; }
     const n=prompt("Nombre del invitado"); if(!n||!n.trim()) return;
     const h=prompt("Handicap del invitado","18"); if(h===null) return;
@@ -2749,7 +2913,7 @@ function ligarAmistosos(){
     AM.hcpInv[id]=Math.max(0,Math.min(54,+h||0)); AM.sel.push(id); S.err=""; pintar();
   };
   document.querySelectorAll("[data-am]").forEach(b=>b.onclick=()=>{
-    const j=b.dataset.am, cupo=AM.modalidad==="MATCH"?2:AM.modalidad==="P420"?3:4;
+    const j=b.dataset.am, cupo=cupoAm(AM.modalidad);
     const i=AM.sel.indexOf(j);
     if(i>=0) AM.sel.splice(i,1); else { if(AM.sel.length>=cupo) AM.sel.shift(); AM.sel.push(j); }
     pintar();
@@ -2760,7 +2924,7 @@ function ligarAmistosos(){
     const lados = AM.modalidad==="FOURBALL" ? ["A","A","B","B"] : AM.modalidad==="MATCH" ? ["A","B"] : ["1","2","3"];
     const bA=baseAm(), hcps=AM.sel.map(j=>bA[j]);
     const r=await api("crearAmistoso",{token:tok(),modalidad:AM.modalidad,cancha_id:AM.cancha||(S.cat.canchas[0]||{}).id,
-      hcp_modo:AM.hcp_modo,porcentaje:AM.pct,p_bola:AM.p_bola,p_suma:AM.p_suma,jugadores_json:JSON.stringify(AM.sel),lados:lados.join(","),hcps_json:JSON.stringify(hcps)},"POST");
+      hcp_modo:AM.hcp_modo,porcentaje:AM.pct,desempate:AM.desempate?1:0,ld_hoyo:AM.ld||"",ba_hoyo:AM.ba||"",p_bola:AM.p_bola,p_suma:AM.p_suma,jugadores_json:JSON.stringify(AM.sel),lados:lados.join(","),hcps_json:JSON.stringify(hcps)},"POST");
     if(!r.ok){ S.err=r.error; cr.disabled=false; pintar(); return; }
     AM.nueva=false; AM.hoyo=1; AM.act=null; traerAmistosos(); location.hash="#/partida/"+r.partida_id; refrescar(true);
   };
@@ -2780,7 +2944,8 @@ function ligarAmistosos(){
   if(AM.act){ const p=AM.act;
     ligarCarga({mid:p.partida_id, jug:p.jugadores.map(j=>j.id), hoyo:AM.hoyo, par:p.cancha.par,
       guardado:(id,i)=>(p.jugadores.find(x=>x.id===id)||{golpes:[]}).golpes[i],
-      nombre:nomAm, avanzar:h=>{ AM.hoyo=h; },
+      nombre:nomAm, avatarDe:id=>avAm(id,"sm"), avanzar:h=>{ AM.hoyo=h; },
+      premiosEn:h=>premiosHoyo(p,h), premios:()=>(AM.act||p).premios, linea:()=>p.jugadores.map(j=>j.id),
       enviar:async()=>{ const x=await enviarPendientes(); if(x.errores.length) S.err="No se pudo guardar: "+x.errores[0]; if(AM.act) await traerAmistoso(AM.act.partida_id); }});
   }
   const ca=document.getElementById("cerrarAm");
@@ -2945,7 +3110,7 @@ function resumenRyder(id){
 
 /* ─── pintura general ─── */
 function pintar(){
-  try{ pintar_(); restaurarForm(); }
+  try{ pintar_(); restaurarForm(); if(S.premioPend){ document.getElementById("app").insertAdjacentHTML("beforeend",vistaHojaPremio()); ligarHojaPremio(); } }
   catch(e){
     console.error(e);
     app().innerHTML=`<div style="padding:24px"><h1>Algo se rompió al dibujar la pantalla</h1>
@@ -2960,7 +3125,7 @@ function pintar_(){
   let cuerpo="";
   try{
     if(tab==="vivo") cuerpo = r==="partida" ? (AM.act?vistaAmistoso():`<div class="load">Cargando la partida…</div>`) : (S.match?vistaMatch():vistaVivoTodo());
-    else if(tab==="jugar") cuerpo = r==="armar" ? `<a class="atras" href="#/jugar">‹ Jugar</a>`+(A.cruce?vistaCruce():vistaArmar())
+    else if(tab==="jugar") cuerpo = r==="armar" ? ((!A.evento&&!A.nuevo&&!A.cruce)?`<a class="atras" href="#/jugar">‹ Jugar</a>`:"")+(A.cruce?vistaCruce():vistaArmar())
       : r==="hcp" ? `<a class="atras" href="#/jugar">‹ Jugar</a>`+vistaHcp() : r==="amistosos" ? vistaNuevoAm() : vistaJugar();
     else if(tab==="perfil") cuerpo = DB ? V.jugador(r==="inicio"?"":a) : `<div class="load">Cargando estadísticas…</div>`;
     else {
@@ -3030,8 +3195,11 @@ function ligar(){
   if(mAct){
     const jug=(mAct.una_bola?[mAct.bags[0],mAct.resto[0]]:mAct.bags.concat(mAct.resto)).map(String);
     const tarS={}; mAct.tarjeta.forEach(t=>tarS[String(t.jugador_id)]=t.golpes);
+    const hrA=(mAct.hora||"").trim(), salidaA=hrA?S.est.matches.filter(x=>x.sesion_id===mAct.sesion_id&&(x.hora||"").trim()===hrA):[mAct];
     ligarCarga({mid:mAct.match_id, jug, hoyo:S.hoyo, par:S.est.cancha.par, guardado:(j,i)=>(tarS[String(j)]||[])[i],
-      nombre:j=>nom(j), enviar:()=>refrescar(true),
+      nombre:j=>nom(j), avatarDe:j=>avatar(j,"sm"), enviar:()=>refrescar(true),
+      premiosEn:h=>premiosHoyo(S.est.evento,h), premios:()=>S.est.premios,
+      linea:()=>[...new Set(salidaA.flatMap(x=>x.bags.concat(x.resto)).map(String))],
       /* con varios cruces en la misma salida: después de guardar, pasa al siguiente cruce que le falte ese hoyo;
          cuando la salida completó el hoyo, vuelve al primer cruce en el hoyo siguiente */
       avanzar:h=>{
