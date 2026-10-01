@@ -710,7 +710,14 @@ html,body{overflow-x:hidden}
 main{overflow-x:clip}
 .grid > *{min-width:0}
 .score > *{min-width:0}
-.score .t{white-space:normal;overflow-wrap:anywhere}
+.score .t{white-space:nowrap}
+@media (max-width:600px){
+  .score{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-areas:"a b" "n n";row-gap:8px;padding:18px 12px 10px}
+  .score > div:first-child{grid-area:a} .score > div:last-child{grid-area:b} .score > .n{grid-area:n}
+  .score .logo{height:62px;margin-bottom:6px}
+  .score .t{font-size:17px}
+  .score .n{font-size:58px}
+}
 .card > .mrow{padding-left:12px;padding-right:12px}
 /* encabezado del match (estilo tarjeta de golf): el que va ganando, pintado del nombre al resultado */
 .mh2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card);box-shadow:var(--shadow);margin-bottom:10px}
@@ -729,10 +736,11 @@ main{overflow-x:clip}
 .mh2-par b{font-family:var(--cond);font-size:19px}
 .mh2-par span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
 /* filas de match: mismo criterio, el que va ganando pintado hasta el resultado */
-.mrow.lidA,.mrow.lidB{position:relative;isolation:isolate}
-.mrow.lidA::before,.mrow.lidB::before{content:"";position:absolute;top:5px;bottom:5px;z-index:-1;border-radius:12px}
-.mrow.lidA::before{left:4px;right:calc(50% - 44px)}
-.mrow.lidB::before{right:4px;left:calc(50% - 44px)}
+.mrow.lidA,.mrow.lidB{position:relative;isolation:isolate;row-gap:10px}
+.mrow > .lado:first-child{grid-row:1;grid-column:1} .mrow > .est{grid-row:1;grid-column:2} .mrow > .lado.r{grid-row:1;grid-column:3} .mrow > .sub{grid-row:2;grid-column:1/-1}
+.mrow.lidA::before,.mrow.lidB::before{content:"";grid-row:1;align-self:stretch;z-index:-1;border-radius:12px;margin:-6px 0}
+.mrow.lidA::before{grid-column:1/3;margin-left:-8px;margin-right:-6px}
+.mrow.lidB::before{grid-column:2/4;margin-left:-6px;margin-right:-8px}
 .mrow.f-b::before{background:#1D4ED8} .mrow.f-o::before{background:#C8102E} .mrow.f-r::before{background:#E0A800}
 .mrow.lidA > .lado:first-child, .mrow.lidB > .lado.r{color:#fff}
 .mrow.lidA > .lado:first-child *, .mrow.lidB > .lado.r *{color:inherit!important}
@@ -759,7 +767,11 @@ main{overflow-x:clip}
 .chk{display:flex;align-items:center;gap:10px;margin-top:12px;font-weight:600;font-size:14px;cursor:pointer}
 .chk input{width:20px;height:20px;accent-color:var(--gold)}
 .emo{font-size:23px;line-height:1;display:inline-block;height:24px;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
-.tabbar button:not(.on) .emo{filter:saturate(.75);opacity:.85}
+.tabbar button .emo{transition:transform .15s,filter .15s,opacity .15s}
+.tabbar button:not(.on) .emo{filter:saturate(.7);opacity:.78}
+.tabbar button.on .emo{transform:scale(1.12)}
+.vacio .emo{font-size:40px;height:44px}
+.premio .emo{font-size:24px;height:26px}
 .jcard .ic .emo{font-size:28px;height:30px}
 .prof.centro{flex-direction:column;justify-content:center;text-align:center;gap:12px}
 .prof.centro > div{display:flex;flex-direction:column;align-items:center}
@@ -1720,12 +1732,12 @@ function ligarEditor(pref,c){
 }
 /* íconos de línea, del mismo trazo en toda la app */
 const ICO={
-  perfil:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7"/></svg>`,
-  stats:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><rect x="5" y="11" width="3.2" height="7.5" rx="1"/><rect x="10.4" y="5" width="3.2" height="13.5" rx="1"/><rect x="15.8" y="13.5" width="3.2" height="5" rx="1"/></svg>`,
+  perfil:`<span class="emo" aria-hidden="true">👤</span>`,
+  stats:`<span class="emo" aria-hidden="true">📊</span>`,
   golfista:`<span class="emo" aria-hidden="true">🏌️‍♂️</span>`,
-  vivo:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.6"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/></svg>`,
-  copa:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 21h8M9.5 18h5"/></svg>`,
-  bandera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V3l11 4-11 4"/><ellipse cx="9" cy="21" rx="6" ry="1.2"/></svg>`
+  vivo:`<span class="emo" aria-hidden="true">📡</span>`,
+  copa:`<span class="emo" aria-hidden="true">🏆</span>`,
+  bandera:`<span class="emo" aria-hidden="true">⛳</span>`
 };
 /* los formularios recuerdan lo escrito aunque la pantalla se redibuje */
 const NO_GUARDAR=new Set(["mat","apiurl","amod","acan","ahm","apb","aps","hh"]);
