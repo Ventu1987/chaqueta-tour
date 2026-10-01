@@ -766,6 +766,53 @@ main{overflow-x:clip}
 .hoja .ops button.nadie{justify-content:center;background:none}
 .chk{display:flex;align-items:center;gap:10px;margin-top:12px;font-weight:600;font-size:14px;cursor:pointer}
 .chk input{width:20px;height:20px;accent-color:var(--gold)}
+/* nueva cancha: ida y vuelta, cada una con hoyo, par y hándicap */
+.cn-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:12px}
+.cn-col{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.cn-col h3{margin:0;padding:10px 12px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);background:var(--soft);border-bottom:1px solid var(--line)}
+.cn-hd,.cn-row{display:grid;grid-template-columns:26px minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:center;padding:5px 8px}
+.cn-hd{font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;padding-top:8px;padding-bottom:3px}
+.cn-hd span{text-align:center}
+.cn-row{border-top:1px solid var(--line);height:46px;padding-top:0;padding-bottom:0}
+.cn-row .h{font-family:var(--cond);font-weight:700;font-size:16px;text-align:center;color:var(--ink2)}
+.cn-row select{width:100%;min-width:0;height:34px;line-height:normal;padding:0 2px;font:700 15px/1 inherit;text-align:center;text-align-last:center;border-radius:9px;border:1px solid var(--line);background:var(--soft);color:var(--ink)}
+.cn-row select.par3{background:rgba(15,123,79,.14);border-color:rgba(15,123,79,.4)}
+.cn-row select.par5{background:rgba(29,78,216,.14);border-color:rgba(29,78,216,.4)}
+.cn-row select.sinidx{color:var(--ink3);font-weight:500}
+.cn-tot{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-top:2px solid var(--line);background:var(--soft);font-size:13px;font-weight:600;color:var(--ink2)}
+.cn-tot b{font-family:var(--cond);font-size:22px;color:var(--ink)}
+.cn-total{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:14px 16px;border-radius:14px;background:var(--navy);color:#fff}
+.cn-total span{display:block;font-weight:700;font-size:15px}
+.cn-total small{display:block;font-size:12.5px;opacity:.75;margin-top:2px}
+.cn-total b{font-family:var(--cond);font-size:38px;line-height:1;color:var(--gold)}
+.cn-aviso{color:var(--red)}
+/* marcador de la Ryder: equipos y resultado del mismo tamaño; el que va ganando, en su rectángulo de color */
+.marc2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:12px}
+.marc2 .mside{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  font-family:var(--cond);font-weight:700;font-size:22px;line-height:1.1;min-height:58px}
+.marc2 .mside .eq{flex:1;min-width:0}
+.marc2 .mside b{font-weight:700}
+.marc2 .mside.a{color:var(--bags)} .marc2 .mside.b{color:var(--resto);text-align:right}
+.marc2 .mside.lid{border-color:transparent}
+.marc2 .mside.lid.f-b{background:#1D4ED8;color:#fff} .marc2 .mside.lid.f-r{background:#E0A800;color:#1d1500}
+.marcador .barra i.b{background:#1D4ED8} .marcador .barra i.r{background:#E0A800}
+/* filas de match: cada lado se queda en su mitad (los nombres largos se cortan con "…", nunca pisan al otro) */
+.mrow{column-gap:10px}
+.mrow > .lado{min-width:0;overflow:hidden}
+.pj.par{width:100%;min-width:0}
+.pareja{width:100%}
+.pareja .pp{max-width:100%;min-width:0}
+.pj.r .pareja .pp{margin-left:auto}
+.mrow .nm.nm3 > span:not(.vs){white-space:nowrap}
+.cargaj .nm .gp{display:flex;flex-wrap:wrap;align-items:center;gap:3px 6px;white-space:normal}
+.cargaj .nm .gp .gchip{margin-left:0}
+@media (max-width:380px){
+  .mrow .pj > .av, .mrow .pj > .avs .av{width:30px;height:30px}
+  .mrow .pj{gap:6px}
+  .mrow .nm, .pareja .pp span{font-size:13px}
+  .mrow > .est{padding-left:7px;padding-right:7px;font-size:13.5px}
+  .card > .mrow{padding-left:8px;padding-right:8px}
+}
 .emo{font-size:23px;line-height:1;display:inline-block;height:24px;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
 .tabbar button .emo{transition:transform .15s,filter .15s,opacity .15s}
 .tabbar button:not(.on) .emo{filter:saturate(.7);opacity:.78}
@@ -2380,7 +2427,7 @@ function filaAm(p){
   const lid = !p.lider ? "" : (p.modalidad==="FOURBALL" ? (p.lider==="A"?"b":"o") : colAm(p,p.lider));
   const sub=`${MODAL[p.modalidad]} · ${esc(p.cancha.nombre||"")}${p.jugados&&p.estado!=="CERRADA"?` · hoyo ${p.jugados}`:""}${p.estado==="CERRADA"?" · terminada":""}`;
   if(p.modalidad==="P420"||p.modalidad==="STABLEFORD") return `<div class="mrow am am3" data-p="${p.partida_id}">
-    <div class="lado"><div class="pj">${grupoAv(J,avAm,"sm")}<div class="nm nm3">${J.map(j=>`<span class="c-${colAm(p,j)}">${esc(nomAm(j))}</span>`).join('<span class="vs">·</span>')}</div></div></div>
+    <div class="lado"><div class="pj">${grupoAv(J,avAm,"sm")}<div class="nm nm3">${J.map(j=>`<span class="c-${colAm(p,j)}">${esc(nomAm(j))}</span>`).join(' <span class="vs">·</span> ')}</div></div></div>
     <span class="est ${lid} ${fin}">${esc(p.resumen||"—")}</span><div class="sub">${sub}</div></div>`;
   const A=p.jugadores.filter(j=>colAm(p,j.id)==="b").map(j=>j.id), B=p.jugadores.filter(j=>colAm(p,j.id)==="o").map(j=>j.id);
   const ld=(l,c,r)=>`<div class="lado ${r?"r":""}">${ladoFila(l,{nombre:nomAm,av:avAm,cls:"c-"+c,r})}</div>`;
@@ -2412,8 +2459,10 @@ function vistaVivo(){
   e.matches.forEach(m=>{ (porSes[m.sesion_id]=porSes[m.sesion_id]||[]).push(m); });
   return `
   <div class="marcador">
-    <div class="n"><span class="b">${B}</span> <span class="muted" style="font-size:.45em">a</span> <span class="r">${R}</span></div>
-    <div class="eq"><span class="b">Bags Boys</span><span class="r">Resto del Mundo</span></div>
+    <div class="marc2">
+      <div class="mside a ${B>R?"lid f-b":""}"><span class="eq">Bags Boys</span><b>${fmt(B)}</b></div>
+      <div class="mside b ${R>B?"lid f-r":""}"><b>${fmt(R)}</b><span class="eq">Resto del Mundo</span></div>
+    </div>
     <div class="barra"><i class="b" style="width:${B/tot*100}%"></i><i class="r" style="width:${R/tot*100}%"></i></div>
     ${vivos?`<div class="small muted" style="margin-top:6px">Así va: cada match en juego suma para el que lo va ganando · definidos ${fmt(e.marcador.bags)} a ${fmt(e.marcador.resto)}</div>`:""}
     <div class="small muted" style="margin-top:8px">${esc(e.evento.nombre)} · ${esc(e.cancha.nombre||"")}${e.cancha.recorrido?" "+esc(e.cancha.recorrido):""}</div>
@@ -2760,7 +2809,7 @@ function vistaAmistosos(){
     const lid = !p.lider ? "" : (p.modalidad==="FOURBALL" ? (p.lider==="A"?"b":"o") : colAm(p,p.lider));
     const sub=`${MODAL[p.modalidad]} · ${esc(p.cancha.nombre||"")}${p.jugados&&p.estado!=="CERRADA"?` · hoyo ${p.jugados}`:""}${p.estado==="CERRADA"?" · terminada":""}`;
     if(p.modalidad==="P420"||p.modalidad==="STABLEFORD") return `<div class="mrow am am3" data-p="${p.partida_id}">
-      <div class="lado"><div class="pj">${grupoAv(J,avAm,"sm")}<div class="nm nm3">${J.map(j=>`<span class="c-${colAm(p,j)}">${esc(nomAm(j))}</span>`).join('<span class="vs">·</span>')}</div></div></div>
+      <div class="lado"><div class="pj">${grupoAv(J,avAm,"sm")}<div class="nm nm3">${J.map(j=>`<span class="c-${colAm(p,j)}">${esc(nomAm(j))}</span>`).join(' <span class="vs">·</span> ')}</div></div></div>
       <span class="est ${lid} ${fin}">${esc(p.resumen||"—")}</span><div class="sub">${sub}</div></div>`;
     const A=p.jugadores.filter(j=>colAm(p,j.id)==="b").map(j=>j.id), B=p.jugadores.filter(j=>colAm(p,j.id)==="o").map(j=>j.id);
     const ld=(l,c,r)=>`<div class="lado ${r?"r":""}">${ladoFila(l,{nombre:nomAm,av:avAm,cls:"c-"+c,r})}</div>`;
@@ -2777,21 +2826,28 @@ function vistaAmistosos(){
   ${!AM.lista.length?`<div class="aviso" style="margin-top:12px">Todavía no jugaste ninguna. Creá la primera y quedará en tu historial.</div>`:""}`;
 }
 function vistaCanchaNueva(){
-  const tot=AM.par.reduce((x,y)=>x+(+y||0),0);
-  const fila=h=>`<div class="hoyo9"><span>${h+1}</span>
-    <input class="pin9" data-par="${h}" inputmode="numeric" value="${AM.par[h]}">
-    <input class="pin9 ix" data-idx="${h}" inputmode="numeric" placeholder="—" value="${AM.idx[h]}"></div>`;
-  return `<button class="btn volver-vivo" id="volverCan">← Volver</button>
-  <h1>Agregar una cancha</h1>
-  <p class="lead">Cargá el par de cada hoyo. El índice es opcional: si no lo sabés, la app lo estima por el par. Queda guardada para todos.</p>
+  if(!Array.isArray(AM.par)||AM.par.length!==18) AM.par=Array(18).fill(4);
+  if(!Array.isArray(AM.idx)||AM.idx.length!==18) AM.idx=Array(18).fill("");
+  const usados=new Set(AM.idx.filter(x=>x!=="").map(Number));
+  const suma=(d,h)=>AM.par.slice(d,h).reduce((a,b)=>a+(+b||0),0);
+  const ida=suma(0,9), vta=suma(9,18), cargados=usados.size;
+  const fila=h=>{ const v=AM.idx[h];
+    return `<div class="cn-row"><span class="h">${h+1}</span>
+      <select data-par="${h}" class="par${AM.par[h]}" aria-label="Par del hoyo ${h+1}">${[3,4,5].map(n=>`<option value="${n}" ${+AM.par[h]===n?"selected":""}>${n}</option>`).join("")}</select>
+      <select data-idx="${h}" class="${v===""?"sinidx":""}" aria-label="Hándicap (índice) del hoyo ${h+1}"><option value="">-</option>${[...Array(18)].map((_,k)=>k+1).filter(n=>!usados.has(n)||String(n)===String(v)).map(n=>`<option value="${n}" ${String(n)===String(v)?"selected":""}>${n}</option>`).join("")}</select></div>`; };
+  const col=(t,d,h,tot)=>`<div class="cn-col"><h3>${t}</h3><div class="cn-hd"><span>Hoyo</span><span>Par</span><span>Hdc</span></div>
+    ${[...Array(h-d)].map((_,k)=>fila(d+k)).join("")}<div class="cn-tot"><span>Par ${t.toLowerCase()}</span><b>${tot}</b></div></div>`;
+  const estadoIdx = cargados===0 ? `Sin hándicap de hoyos: se estiman por el par al guardar.`
+    : cargados===18 ? `Hándicap de los 18 hoyos completo.` : `Hándicap cargado en ${cargados} de 18 hoyos: completalos todos o dejalos todos vacíos.`;
+  return `<button class="btn volver-vivo" id="volverCan">‹ Nueva partida</button>
+  <h1>Nueva cancha</h1>
+  <p class="lead">Elegí el par y el hándicap (índice) de cada hoyo. Queda guardada para todos.</p>
   <div class="card"><div class="row2"><div><label class="f">Nombre</label><input type="text" id="cnom" placeholder="Ej: Martindale"></div>
-    <div><label class="f">Recorrido (opcional)</label><input type="text" id="crec" placeholder="Ej: Azules"></div></div>
-    <div class="row2" style="margin-top:10px"><button class="btn sec" id="c72">Par 72 típico</button><button class="btn sec" id="c71">Par 71 típico</button></div></div>
-  <div class="card"><div class="hoyohd"><span>Hoyo</span><span>Par</span><span>Índice</span></div>
-    <div class="hoyos9">${[...Array(9)].map((_,h)=>fila(h)).join("")}</div>
-    <div class="hoyos9">${[...Array(9)].map((_,h)=>fila(h+9)).join("")}</div>
-    <div class="small muted" style="margin-top:8px">Par total: <b>${tot}</b></div></div>
-  <button class="btn" id="guardarCan">Guardar la cancha</button>
+    <div><label class="f">Recorrido (opcional)</label><input type="text" id="crec" placeholder="Ej: Azules"></div></div></div>
+  <div class="cn-grid">${col("Ida",0,9,ida)}${col("Vuelta",9,18,vta)}</div>
+  <div class="cn-total"><div><span>Par de la cancha</span><small>Ida ${ida} + Vuelta ${vta}</small></div><b>${ida+vta}</b></div>
+  <p class="small ${cargados>0&&cargados<18?"cn-aviso":"muted"}" style="margin:10px 2px 0">${estadoIdx}</p>
+  <button class="btn" id="guardarCan" ${cargados>0&&cargados<18?"disabled":""}>Guardar la cancha</button>
   <div class="err">${esc(S.err)}</div>`;
 }
 function vistaNuevoAm(){
@@ -2898,10 +2954,8 @@ function ligarAmistosos(){
   if(c) c.onclick=()=>{ AM.nueva=false; S.err=""; location.hash="#/jugar"; };
   const vc=document.getElementById("volverCan");
   if(vc) vc.onclick=()=>{ AM.canchaNueva=false; S.err=""; pintar(); };
-  document.querySelectorAll("[data-par]").forEach(e=>e.onchange=()=>{ AM.par[+e.dataset.par]=+e.value||4; pintar(); });
-  document.querySelectorAll("[data-idx]").forEach(e=>e.onchange=()=>{ AM.idx[+e.dataset.idx]=e.value.trim(); });
-  const c72=document.getElementById("c72"); if(c72) c72.onclick=()=>{ AM.par=[4,5,4,3,4,4,5,3,4, 4,4,3,5,4,4,3,4,5]; pintar(); };
-  const c71=document.getElementById("c71"); if(c71) c71.onclick=()=>{ AM.par=[4,4,3,5,4,4,3,4,4, 4,5,4,3,4,4,5,3,4]; pintar(); };
+  document.querySelectorAll("select[data-par]").forEach(e=>e.onchange=()=>{ AM.par[+e.dataset.par]=+e.value||4; pintar(); });
+  document.querySelectorAll("select[data-idx]").forEach(e=>e.onchange=()=>{ AM.idx[+e.dataset.idx]=e.value; pintar(); });
   const gc=document.getElementById("guardarCan");
   if(gc) gc.onclick=async()=>{
     gc.disabled=true; gc.textContent="Guardando…";
@@ -2910,7 +2964,8 @@ function ligarAmistosos(){
     if(!r.ok){ S.err=r.error; gc.disabled=false; pintar(); return; }
     const c=await api("catalogo"); if(c&&c.ok) S.cat=c;
     AM.cancha=String(r.cancha_id); AM.canchaNueva=false; delete S.form.cnom; delete S.form.crec;
-    S.err=r.existia?"Esa cancha ya estaba cargada: la dejamos seleccionada":(r.estimado?"Cancha guardada. Los índices se estimaron por el par: corregilos en la hoja CANCHAS cuando los tengas":""); pintar();
+    AM.par=Array(18).fill(4); AM.idx=Array(18).fill("");
+    S.err=r.existia?"Esa cancha ya estaba cargada: la dejamos seleccionada":(r.estimado?"Cancha guardada. El hándicap de los hoyos se estimó por el par: corregilo en la hoja CANCHAS cuando lo tengas":""); pintar();
   };
   ["amod","acan","ahm","apb","aps"].forEach(id=>{ const e=document.getElementById(id); if(!e) return;
     e.onchange=()=>{ if(id==="amod"){ AM.modalidad=e.value; AM.sel=[String(S.ses.jugador.id)]; if(e.value==="STABLEFORD"){ AM.hcp_modo="COMPLETO"; AM.pct=100; } } if(id==="acan"){ if(e.value==="NUEVA"){ AM.canchaNueva=true; S.err=""; pintar(); return; } AM.cancha=e.value; }
