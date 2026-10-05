@@ -747,6 +747,7 @@ main{overflow-x:clip}
 .mrow.f-r.lidA > .lado:first-child, .mrow.f-r.lidB > .lado.r{color:#1d1500}
 .mrow.lidA > .est, .mrow.lidB > .est{background:transparent!important;color:#fff!important;border-color:transparent!important;font-size:16px}
 .mrow.f-r.lidA > .est, .mrow.f-r.lidB > .est{color:#1d1500!important}
+.mrow.lidA > .est.fin, .mrow.lidB > .est.fin{box-shadow:none!important;outline:none!important;border:0!important}
 .mrow.lidA > .sub, .mrow.lidB > .sub{position:relative}
 /* 4-2-0: puntos y diferencia con el último */
 .p4 span small{font-size:.55em;font-weight:600;opacity:.75;margin-left:4px}
@@ -786,6 +787,34 @@ main{overflow-x:clip}
 .cn-total small{display:block;font-size:12.5px;opacity:.75;margin-top:2px}
 .cn-total b{font-family:var(--cond);font-size:38px;line-height:1;color:var(--gold)}
 .cn-aviso{color:var(--red)}
+/* perfil: indicadores en dos filas */
+.kpis.kpi3{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.kpis.kpi2{grid-template-columns:repeat(2,minmax(0,1fr))!important;margin-top:8px}
+.kpi-sub{font-size:11px;color:var(--ink3);margin-top:3px;line-height:1.3}
+.kpi-ed{border:0;background:none;color:var(--gold);cursor:pointer;font-size:13px;padding:0 2px;font-weight:700}
+@media (max-width:380px){ .kpis.kpi3 .kpi .big{font-size:26px} .kpis.kpi3 .kpi .lb{font-size:11.5px} }
+/* golpes en la tarjeta: forma según el resultado */
+.sc{display:inline-grid;place-items:center;width:24px;height:24px;font-weight:700;line-height:1;border-radius:4px;box-sizing:border-box}
+.sc.bir,.sc.eag{border:1.6px solid currentColor;border-radius:50%}
+.sc.eag{box-shadow:0 0 0 2px var(--card),0 0 0 3.6px currentColor}
+.sc.bog,.sc.dbl{border:1.6px solid currentColor;border-radius:3px}
+.sc.dbl{box-shadow:0 0 0 2px var(--card),0 0 0 3.6px currentColor}
+.sc.w-b{background:#1D4ED8;color:#fff} .sc.w-o{background:#C8102E;color:#fff} .sc.w-y{background:#E0A800;color:#1d1500} .sc.w-r{background:#E0A800;color:#1d1500} .sc.w-v{background:#0F7B4F;color:#fff}
+.sc.par.w-b,.sc.par.w-o,.sc.par.w-y,.sc.par.w-r,.sc.par.w-v{border-radius:7px}
+/* estilo de tarjeta de golf (Ryder y laguneada): birdie círculo rojo, bogey cuadrado celeste, doble o peor cuadrado azul */
+.sc.gbk{border:0!important;box-shadow:none!important}
+.sc.gbk.bir,.sc.gbk.eag{background:#E3262E;color:#fff;border-radius:50%}
+.sc.gbk.eag{box-shadow:0 0 0 2px var(--card),0 0 0 3.6px #E3262E!important}
+.sc.gbk.bog{background:#5AA9F0;color:#fff;border-radius:3px}
+.sc.gbk.dbl{background:#123A8C;color:#fff;border-radius:3px}
+.sc.gbk.par{background:none}
+.leyenda b.sc{width:18px;height:18px;font-size:10.5px;margin-right:5px;vertical-align:-4px}
+/* recibe golpe: puntito en la esquina de la casilla (no tapa la forma) */
+table.tarjeta td.rg1,table.tarjeta td.rg2{background:none!important;position:relative}
+table.tarjeta td.rg1::after,table.tarjeta td.rg2::after{content:"";position:absolute;top:3px;right:2px;width:5px;height:5px;border-radius:50%;background:var(--ink2)}
+table.tarjeta td.rg2::after{box-shadow:-7px 0 0 var(--ink2)}
+.leyenda i.gpt{width:6px;height:6px;border-radius:50%;background:var(--ink2);box-shadow:none;vertical-align:1px}
+.leyenda i.gpt.dos{box-shadow:-8px 0 0 var(--ink2);margin-left:8px}
 /* laguneada y torneo */
 .lagbox{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow);margin-bottom:10px}
 .lagbox span{display:block;font-weight:700;font-size:15px}
@@ -1468,6 +1497,11 @@ V.jugador = (arg) => {
   const cnt={ea:0,bi:0,pa:0,bo:0,db:0}; VV.forEach(v=>v.g.forEach((g,h)=>cnt[tipoHoyo(g,v.c.par[h])]++));
   const tot=Object.values(cnt).reduce((a,b)=>a+b,0)||1; const pc=k=>cnt[k]/tot*100;
   const prom=VV.length?VV.reduce((a,v)=>a+v.gross,0)/VV.length:null;
+  /* hdc Chaqueta: como la AAG, promedio de las 8 mejores de las últimas 20 tarjetas (golpes sobre el par de la cancha) */
+  const ult20=VV.slice().sort((a,b)=>b.f.t-a.f.t||b.f.n-a.f.n).slice(0,20);
+  const difs=ult20.map(v=>v.gross-v.c.parT).sort((a,b)=>a-b).slice(0,8);
+  const hcpCh=difs.length?difs.reduce((a,b)=>a+b,0)/difs.length:null;
+  const aag=((S.cat&&S.cat.hcp_aag)||{})[String(id)], puedeAag=+id===+S.ses.jugador.id||S.ses.jugador.rol==="admin";
   const baL=R.filter(r=>r.ba), ldL=R.filter(r=>r.ld), bgL=R.filter(r=>r.bg);
   const cuch=P.filter(r=>r.medal<0), abw=P.filter(r=>r.est==="ABANDONO"||r.est==="WO");
   const porT=temp.map(t=>{ const T=C.find(c=>c.t===t).T, fila=T.filas.find(x=>x.jid===id);
@@ -1487,11 +1521,15 @@ V.jugador = (arg) => {
     ${equipo(id)?`<div class="teamline"><img src="${LOGO[equipo(id)]}" alt="">${EQNOM[equipo(id)]}</div>`:""}
     ${tit.length||podT.length?`<div class="ttl">${tit.map(t=>`<span>Campeón ${t}</span>`).join("")}${podT.map(x=>`<span class="alt">${x.f.pos}° en ${x.t}</span>`).join("")}</div>`:""}</div></section>
   ${esYo?cardEnJuego(id):""}
-  <div class="kpis kpi4" style="margin-top:12px">
-    <div class="kpi"><div class="big">${hcpAct!=null?fmt(hcpAct):"—"}</div><div class="lb">handicap</div></div>
+  <div class="kpis kpi3" style="margin-top:12px">
+    <div class="kpi"><div class="big">${aag?fmtH(aag.hcp):"—"}</div><div class="lb">handicap AAG${puedeAag?` <button class="kpi-ed" data-aag="${id}" aria-label="Cambiar el handicap AAG">✎</button>`:""}</div>
+      <div class="kpi-sub">${aag?"al "+new Date(aag.fecha).toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"2-digit"}):(puedeAag?"tocá ✎ para cargarlo":"sin cargar")}</div></div>
+    <div class="kpi"><div class="big">${fmt(prom)}</div><div class="lb">gross promedio</div><div class="kpi-sub">${VV.length} tarjeta${VV.length===1?"":"s"} del Tour</div></div>
+    <div class="kpi"><div class="big">${hcpCh!=null?fmtH(hcpCh):"—"}</div><div class="lb">hdc Chaqueta</div><div class="kpi-sub">${difs.length?`mejores ${difs.length} de ${ult20.length}`:"sin tarjetas"}</div></div>
+  </div>
+  <div class="kpis kpi2">
     <div class="kpi"><div class="big">${wins.length}</div><div class="lb">fecha${wins.length===1?"":"s"} ganada${wins.length===1?"":"s"}</div></div>
     <div class="kpi"><div class="big">${tops.length}</div><div class="lb">top 3 en fechas</div></div>
-    <div class="kpi"><div class="big">${fmt(prom)}</div><div class="lb">gross promedio</div></div>
   </div>
   <h2>Mejores marcas</h2>
   <div class="marks">
@@ -1553,6 +1591,49 @@ V.jugador = (arg) => {
   ${resumenPreRyder(id)}
   ${esYo?resumenRyder(id)+resumenAm(id):""}`;
 };
+/* AMISTOSOS JUGADOS: las partidas y torneos terminados, de la más nueva a la más vieja */
+function ganoAm(p,id){
+  if(!p.lider) return false;
+  if(p.modalidad==="FOURBALL") return (p.jugadores.find(j=>String(j.id)===String(id))||{}).lado===p.lider;
+  return String(p.lider)===String(id);
+}
+V.partidas = () => {
+  const H=S.amHist;
+  if(!H || Date.now()-(S.amHistHora||0)>60000){
+    if(!S.amHistCargando){ S.amHistCargando=true;
+      api("historialAmistosos",{}).then(r=>{ S.amHistCargando=false; S.amHist=r&&r.ok?r:{partidas:[],torneos:[],error:(r&&r.error)||""}; S.amHistHora=Date.now(); pintar(); }); }
+    if(!H) return `<div class="load">Cargando los amistosos…</div>`;
+  }
+  const F=S.amFil||(S.amFil={j:"",m:""});
+  const todos=[...new Set(H.partidas.flatMap(p=>p.jugadores.map(j=>String(j.id))).filter(x=>!esInv(x)))].sort((a,b)=>nom(a).localeCompare(nom(b)));
+  const ps=H.partidas.filter(p=>(!F.j||p.jugadores.some(j=>String(j.id)===F.j))&&(!F.m||p.modalidad===F.m));
+  const ts=(H.torneos||[]).filter(t=>!F.j||t.lineas.some(l=>l.jugadores.some(j=>String(j.id)===F.j)));
+  const gan=F.j?ps.filter(p=>ganoAm(p,F.j)).length:0, conGanador=F.j?ps.filter(p=>p.lider).length:0;
+  const porDia={}; ps.forEach(p=>{ const d=String(p.dia||"").slice(0,10); (porDia[d]=porDia[d]||[]).push(p); });
+  const diaTxt=d=>{ const x=new Date(d+"T12:00:00"); return isNaN(x)?d:x.toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long",year:"numeric"}); };
+  return `<h1>Amistosos</h1>
+  <p class="lead">Las partidas y torneos que se terminaron y guardaron, de la más reciente a la más vieja.</p>
+  ${H.error?`<div class="aviso">${esc(H.error)}</div>`:""}
+  <div class="row2"><div><label class="f">Jugador</label><select id="filJ"><option value="">Todos</option>${todos.map(j=>`<option value="${j}" ${F.j===j?"selected":""}>${esc(nom(j))}</option>`).join("")}</select></div>
+    <div><label class="f">Modalidad</label><select id="filM"><option value="">Todas</option>${Object.entries(MODAL).filter(([k])=>k!=="LAGUNEADA").map(([k,v])=>`<option value="${k}" ${F.m===k?"selected":""}>${v.replace(/ \(.*\)$/,"")}</option>`).join("")}</select></div></div>
+  <div class="kpis ${F.j?"kpi3":"kpi2"}" style="margin-top:12px">
+    <div class="kpi"><div class="big">${ps.length}</div><div class="lb">partida${ps.length===1?"":"s"}</div></div>
+    ${F.j?`<div class="kpi"><div class="big">${gan}</div><div class="lb">ganada${gan===1?"":"s"}</div></div>
+      <div class="kpi"><div class="big">${conGanador?Math.round(gan/conGanador*100)+"%":"—"}</div><div class="lb">efectividad</div></div>`
+      :`<div class="kpi"><div class="big">${ts.length}</div><div class="lb">torneo${ts.length===1?"":"s"}</div></div>`}
+  </div>
+  ${ts.length?`<div class="sec-t">Torneos</div><div class="card">${ts.map(t=>{ const tb=tablaTorneo(t), g=tb&&tb.filas[0];
+     return `<div class="mrow am am3" data-tor-h="${t.torneo_id}"><div class="lado"><div class="nm nm3"><b>${esc(t.nombre||"Torneo amistoso")}</b></div></div>
+       <span class="est fin">${g&&g.hoyos?esc(tb.fmt(g.pts)):"—"}</span><div class="sub">${esc(lineaTorneo(t))} · ${t.lineas.length} líneas${g&&g.hoyos?" · ganó "+esc(g.nombre):""}</div></div>`; }).join("")}</div>`:""}
+  ${ps.length?Object.keys(porDia).map(d=>`<div class="sec-t">${esc(diaTxt(d))}</div><div class="card">${porDia[d].map(p=>filaAm(p).replace('class="mrow am','data-hist="1" class="mrow am')).join("")}</div>`).join("")
+    :`<div class="vacio">${ICO.golfista}<b>Todavía no hay amistosos guardados</b><span>Cuando una partida se termina con "Guardar y terminar", aparece acá.</span></div>`}`;
+};
+V.partidas.after = () => {
+  const fj=document.getElementById("filJ"); if(fj) fj.onchange=()=>{ S.amFil.j=fj.value; pintar(); };
+  const fm=document.getElementById("filM"); if(fm) fm.onchange=()=>{ S.amFil.m=fm.value; pintar(); };
+  document.querySelectorAll("[data-hist]").forEach(r=>r.onclick=()=>{ AM.volver="#/partidas"; location.hash="#/partida/"+r.dataset.p; });
+  document.querySelectorAll("[data-tor-h]").forEach(r=>r.onclick=()=>{ location.hash="#/torneo/"+r.dataset.torH; });
+};
 /* radar: compara los perfiles de juego de dos jugadores */
 function perfilRadar(id){
   const V=vueltas().filter(v=>v.r.jid===id);
@@ -1574,6 +1655,15 @@ function perfilRadar(id){
   };
 }
 V.jugador.after = (arg) => {
+  document.querySelectorAll("[data-aag]").forEach(b=>b.onclick=async()=>{
+    const j=b.dataset.aag, act=((S.cat&&S.cat.hcp_aag)||{})[j];
+    const t=prompt("Handicap AAG de "+nom(j)+" (vacío para borrarlo)", act?fmtH(act.hcp):""); if(t===null) return;
+    const v=t.trim()===""?null:+t.replace(",",".");
+    if(v!=null&&(isNaN(v)||v<-10||v>54)){ alert("Tiene que ser un número entre -10 y 54"); return; }
+    const r=await api("fijarHcpAag",{jugador_id:+j,hcp:v},"POST");
+    if(!r.ok){ alert(r.error); return; }
+    S.cat.hcp_aag=S.cat.hcp_aag||{}; if(v==null) delete S.cat.hcp_aag[j]; else S.cat.hcp_aag[j]={hcp:v,fecha:new Date().toISOString()};
+    pintar(); });
   const s=document.getElementById("selJ"); if(s) s.onchange=()=>{ rivalSel=null; if(!s.value) return; location.hash=(+s.value===+S.ses.jugador.id)?"#/perfil":"#/perfil/"+s.value; };
   const r=document.getElementById("selR"); if(r) r.onchange=()=>{ rivalSel=+r.value; render(); };
   const id=+arg||+S.ses.jugador.id; if(!DB.jug.has(id)) return;
@@ -1816,7 +1906,12 @@ function golpesJuego(base,pct,modo){
 }
 const tira=r=>`<div class="tira">${r.map((g,i)=>`<span class="${g>=2?"g2":g?"g1":""}">${i+1}</span>`).join("")}</div>`;
 const claseGolpe=(r,h)=>{ const g=r?r[h]:0; return g>=2?"rg2":g?"rg1":""; };
-const leyenda=pend=>`<div class="leyenda"><span><i></i>recibe golpe</span><span><i class="dos"></i>recibe dos</span>${pend?`<span><i class="pd"></i>guardado en el teléfono</span>`:""}</div>`;
+/* forma del golpe según el par: águila o mejor, birdie, par, bogey, doble bogey o peor */
+const formaGolpe=(g,par)=>{ const d=g-par; return d<=-2?"eag":d===-1?"bir":d===0?"par":d===1?"bog":"dbl"; };
+const leyenda=(pend,estilo)=>`<div class="leyenda">${estilo==="gbk"
+  ?`<span><b class="sc gbk bir">3</b>birdie o mejor</span><span><b class="sc gbk par">4</b>par</span><span><b class="sc gbk bog">5</b>bogey</span><span><b class="sc gbk dbl">6</b>doble o peor</span>`
+  :`<span><b class="sc bir">3</b>birdie</span><span><b class="sc eag">2</b>águila</span><span><b class="sc bog">5</b>bogey</span><span><b class="sc dbl">6</b>doble o peor</span><span><b class="sc par w-b">4</b>ganó el hoyo</span>`}
+  <span><i class="gpt"></i>recibe golpe</span><span><i class="gpt dos"></i>recibe dos</span>${pend?`<span><i class="pd"></i>guardado en el teléfono</span>`:""}</div>`;
 function editorHcp(o){
   const rec=golpesJuego(o.base,o.pct,o.modo), idxOk=o.idx&&o.idx.length===18&&o.idx.every(x=>x>=1);
   return `<div class="small muted">Porcentaje del handicap</div>
@@ -2138,6 +2233,9 @@ async function apiSB(a, d = {}){
     case "marcarPremio":  return rpc("marcar_premio", { p_juego:d.juego, p_tipo:d.tipo, p_jugador:d.jugador || "" });
     case "premiosEvento": { const p = {}; ["ld_hoyo","ba_hoyo"].forEach(k => { if (k in d) p[k] = d[k]; }); return rpc("actualizar_evento", { p_evento:d.evento_id, p }); }
     case "crearTorneo":   return rpc("crear_torneo", { p:d });
+    case "fijarHcpAag":   return rpc("fijar_hcp_aag", { p_jugador:+d.jugador_id, p_hcp:d.hcp == null ? null : +d.hcp });
+    case "historialAmistosos": { const r = await rpc("historial_amistosos", { p_limite:120 });
+      return r.ok ? { ok:true, partidas:r.partidas.map(armarPartida), torneos:(r.torneos || []).map(armarTorneo) } : r; }
     case "torneo":      { const r = await rpc("torneo", { p_torneo:d.torneo_id }); return r.ok ? { ok:true, torneo:armarTorneo(r.torneo) } : r; }
     case "torneosEnJuego": { const r = await rpc("torneos_en_juego"); return r.ok ? { ok:true, torneos:r.torneos.map(armarTorneo) } : r; }
     case "cerrarTorneo":  return rpc("cerrar_torneo", { p_torneo:d.torneo_id });
@@ -2771,7 +2869,7 @@ function vistaMatch(){
       return `<tr><td class="l" style="color:var(--${lado==="b"?"bags":"resto"});font-weight:600">${esc(nombreLado(j))}</td>
       ${[...Array(hasta-desde+1)].map((_,i)=>{ const h=desde-1+i, v=g[h];
         const gano = m.hoyos[h]===(lado==="b"?"A":"B");
-        return `<td class="${pk.has(String(j)+"|"+(h+1))?"pdc":""} ${claseGolpe((m.recibe_hoyo||{})[String(j)],h)}">${v==null?"·":(gano?`<span class="gb ${lado}">${v}</span>`:v)}</td>`; }).join("")}
+        return `<td class="${pk.has(String(j)+"|"+(h+1))?"pdc":""} ${claseGolpe((m.recibe_hoyo||{})[String(j)],h)}">${v==null?"·":`<span class="sc gbk ${formaGolpe(v,par[h])}">${v}</span>`}</td>`; }).join("")}
       <td><b>${suma||""}</b></td></tr>`; }).join("")}
     <tr class="clas"><td class="l">Estado</td>${[...Array(hasta-desde+1)].map((_,i)=>{
       const h=desde-1+i; if(m.hoyos[h]==null) return "<td></td>";
@@ -2793,7 +2891,7 @@ function vistaMatch(){
   <div class="mhead">${hdrMatch({A:{ids:m.bags,nombre:nom,col:"b",sub:"Bags Boys"},B:{ids:m.resto,nombre:nom,col:"r",sub:"Resto del Mundo"},
       lider:m.jugados&&m.estado>0?"A":m.jugados&&m.estado<0?"B":"", res:st.t, est:m.cerrado?"final":(m.jugados?"hoyo "+m.jugados:"por salir")})}<div style="display:none">
   </div></div>
-  ${selSalida}${falta}${aviso}${tramo(1,9)}${tramo(10,18)}${leyenda(pk.size>0)}${m.una_bola?"":lineaStb(jug.map(j=>({nombre:nombreLado(j),golpes:tar[String(j)]||[],rep:(m.recibe_hoyo||{})[String(j)],cls:m.bags.map(String).includes(String(j))?"c-b":"c-r"})),par)}
+  ${selSalida}${falta}${aviso}${tramo(1,9)}${tramo(10,18)}${leyenda(pk.size>0,"gbk")}${m.una_bola?"":lineaStb(jug.map(j=>({nombre:nombreLado(j),golpes:tar[String(j)]||[],rep:(m.recibe_hoyo||{})[String(j)],cls:m.bags.map(String).includes(String(j))?"c-b":"c-r"})),par)}
   ${hcpInfo}${carga}`;
 }
 
@@ -3181,7 +3279,7 @@ function vistaAmistoso(){
       ${[...Array(h-d+1)].map((_,i)=>{ const k=d-1+i, v=j.golpes[k];
         const hk=p.hoyos[k]==null?"":String(p.hoyos[k]);
         const gano = p.modalidad==="FOURBALL" ? hk===j.lado : (hk!=="=" && hk.split("+").includes(String(j.id)));   /* exacto: "1" no gana cuando ganó "12" */
-        return `<td class="${pkA.has(j.id+"|"+(k+1))?"pdc":""} ${claseGolpe(j.rep,k)}">${v==null?"·":(gano?`<span class="gb ${cl(j)}">${v}</span>`:v)}</td>`; }).join("")}
+        return `<td class="${pkA.has(j.id+"|"+(k+1))?"pdc":""} ${claseGolpe(j.rep,k)}">${v==null?"·":(p.modalidad==="LAGUNEADA"?`<span class="sc gbk ${formaGolpe(v,par[k])}">${v}</span>`:`<span class="sc ${formaGolpe(v,par[k])} ${gano?"w-"+cl(j):""}">${v}</span>`)}</td>`; }).join("")}
       <td><b>${j.golpes.slice(d-1,h).filter(x=>x!=null).reduce((a,b)=>a+b,0)||""}</b></td></tr>`).join("")}
     ${p.modalidad==="MATCH"?`<tr class="clas"><td class="l">Estado</td>${[...Array(h-d+1)].map((_,i)=>{
       const k=d-1+i; if(p.hoyos[k]==null) return "<td></td>";
@@ -3199,13 +3297,13 @@ function vistaAmistoso(){
         guardado:(id,i)=>(p.jugadores.find(x=>x.id===id)||{golpes:[]}).golpes[i], nombre:nomAm, avatarDe:id=>avAm(id),
         premiosEn:h=>premiosHoyo(p,h), premios:()=>p.premios, color:id=>colAm(p,id),
         recibe:id=>(p.jugadores.find(x=>x.id===id)||{}).recibe||0, golpeEn:(id,i)=>((p.jugadores.find(x=>x.id===id)||{}).rep||[])[i]||0, hechoHoyo:i=>p.jugadores.every(j=>j.golpes[i]!=null)}));
-  return `<button class="btn volver-vivo" id="volverAm">${p.torneo_id?"‹ Torneo":"‹ Vivo"}</button>
+  return `<button class="btn volver-vivo" id="volverAm">${AM.volver==="#/partidas"?"‹ Amistosos":p.torneo_id?"‹ Torneo":"‹ Vivo"}</button>
   <h1>${p.torneo_id?`Línea ${p.linea} · ${esc(MODAL[p.modalidad].replace(/ \(.*\)$/,""))}`:MODAL[p.modalidad]}</h1>
   <p class="lead">${esc(p.cancha.nombre||"")}${p.cancha.recorrido?" "+esc(p.cancha.recorrido):""} · golpes ${p.hcp_modo==="DIFERENCIA"?"por diferencia":"completos"}${pctN(p.porcentaje)!==100?" al "+pctN(p.porcentaje)+"\u00a0%":""}${p.modalidad==="FOURBALL"?` · mejor bola ${p.p_bola}${p.p_suma?` y suma ${p.p_suma}`:""}${p.desempate?" · desempata la 2da pelota":""}`:""}</p>
   ${lineaPremios(p,nomAm)}
   <div class="mhead">${marcador}</div>
   ${p.falta_hoyo?`<div class="aviso rojo">Falta cargar el hoyo ${p.falta_hoyo}: el match se cuenta hasta ahí.</div>`:""}
-  ${tramo(1,9)}${tramo(10,18)}${leyenda(pkA.size>0)}${INDIV(p.modalidad)||p.modalidad==="LAGUNEADA"?"":lineaStb(J.map(j=>({nombre:nomAm(j.id),golpes:j.golpes,rep:j.rep,cls:"c-"+cl(j)})),par)}
+  ${tramo(1,9)}${tramo(10,18)}${leyenda(pkA.size>0,p.modalidad==="LAGUNEADA"?"gbk":"win")}${INDIV(p.modalidad)||p.modalidad==="LAGUNEADA"?"":lineaStb(J.map(j=>({nombre:nomAm(j.id),golpes:j.golpes,rep:j.rep,cls:"c-"+cl(j)})),par)}
   ${editAm}
   ${carga}
   ${p.estado==="CERRADA"?`<div class="aviso">Partida terminada y guardada: ${esc(p.resumen)}</div>`:""}
@@ -3269,7 +3367,7 @@ function ligarAmistosos(){
     AM.nueva=false; AM.hoyo=1; AM.act=null; traerAmistosos(); location.hash="#/partida/"+r.partida_id; refrescar(true);
   };
   const v=document.getElementById("volverAm");
-  if(v) v.onclick=()=>{ location.hash=(AM.act&&AM.act.torneo_id)?"#/torneo/"+AM.act.torneo_id:"#/vivo"; };
+  if(v) v.onclick=()=>{ const d=AM.volver; AM.volver=null; location.hash=d||((AM.act&&AM.act.torneo_id)?"#/torneo/"+AM.act.torneo_id:"#/vivo"); };
   if(AM.act){ const pa=AM.act;
     const eh=document.getElementById("editH");
     if(eh) eh.onclick=()=>{ AM.ed={base:Object.fromEntries(pa.jugadores.map(j=>[j.id,j.hcp])),pct:pctN(pa.porcentaje),modo:pa.hcp_modo||"DIFERENCIA"}; AM.editH=true; S.err=""; pintar(); };
@@ -3293,7 +3391,7 @@ function ligarAmistosos(){
     if(!confirm("¿Terminar la partida? Queda guardada en el historial.")) return;
     const r=await api("cerrarAmistoso",{token:tok(),partida_id:AM.act.partida_id},"POST");
     if(!r.ok){ S.err=r.error; pintar(); return; }
-    await traerAmistoso(AM.act.partida_id); traerAmistosos(); refrescar(true);
+    await traerAmistoso(AM.act.partida_id); traerAmistosos(); refrescar(true); S.amHist=null;
   };
   const ba=document.getElementById("borrarAm");
   if(ba) ba.onclick=async()=>{
@@ -3329,7 +3427,7 @@ function resumenAm(id){
 }
 
 /* ═════════ CÁSCARA: ingreso, pestañas y ruteo ═════════ */
-const NAVSTATS=[["estadisticas","Resumen"],["temporada","Temporadas"],["fecha","Fechas"],["ryderhist","Ryder"],["canchas","Canchas"]];
+const NAVSTATS=[["estadisticas","Resumen"],["temporada","Temporadas"],["fecha","Fechas"],["ryderhist","Ryder"],["partidas","Amistosos"],["canchas","Canchas"]];
 function ruta(){ const p=(location.hash||"#/perfil").split("/").filter(Boolean); return {r:(p[1]||"perfil"),a:decodeURIComponent(p[2]||""),b:decodeURIComponent(p[3]||"")}; }
 const TABDE = r => ["vivo","match","partida","torneo"].includes(r) ? "vivo"
   : ["jugar","armar","hcp","amistosos","torneo-nuevo"].includes(r) ? "jugar"
