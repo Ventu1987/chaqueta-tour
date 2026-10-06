@@ -816,6 +816,16 @@ table.pl-t tbody tr{cursor:pointer}
 table.pl-t tbody tr:hover td{background:var(--soft)}
 table.pl-t tr.mia td{background:var(--goldbg)}
 table.pl-t tr.mia td.pl-j{box-shadow:inset 4px 0 0 var(--gold),1px 0 0 var(--line)}
+table.pl-t .pl-car{font-style:normal;color:var(--ink3);margin-left:auto;font-size:12px}
+table.pl-t tr.abierto td{background:var(--soft);border-bottom-color:transparent}
+table.pl-t tr.evo td{background:var(--soft);font-size:12.5px;padding-top:6px;padding-bottom:6px;cursor:default}
+table.pl-t tr.evo td.pl-j{background:var(--soft)}
+table.pl-t tr.evo .evo-a{font-family:var(--cond);font-weight:700;font-size:15px;color:var(--ink2);padding-left:26px}
+table.pl-t tr.evo.pie td{padding-bottom:12px;border-bottom:2px solid var(--line)}
+table.pl-t .evo-nota{text-align:left;color:var(--ink3);font-size:11.5px;white-space:normal}
+table.pl-t i.fl{font-style:normal;font-size:9.5px;margin-left:4px;vertical-align:1px}
+table.pl-t i.fl.sube{color:#16A34A} table.pl-t i.fl.baja{color:#DC2626} table.pl-t i.fl.igual{color:var(--ink3)}
+table.pl-t .mejor{color:#16A34A;font-weight:700} table.pl-t .peor{color:#DC2626;font-weight:700}
 /* perfil: indicadores en dos filas */
 .kpis.kpi3{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 .kpis.kpi2{grid-template-columns:repeat(2,minmax(0,1fr))!important;margin-top:8px}
@@ -848,6 +858,10 @@ table.tarjeta.gbkt td.rg2::after{box-shadow:-7px 0 0 var(--ink2)}
 .sc2.bog,.sc2.dbl{border-radius:5px}
 .sc2.bir,.sc2.eag,.sc2.bog,.sc2.dbl{box-shadow:inset 0 0 0 1.2px var(--ln)}
 .sc2.eag,.sc2.dbl{outline:1.2px solid var(--ln);outline-offset:-4.6px}
+/* birdie y águila: aro dorado más marcado, distinto del círculo liso de "ganó el hoyo" */
+.sc2.bir,.sc2.eag{--ln:var(--gold);box-shadow:inset 0 0 0 2px var(--ln)}
+.sc2.eag{outline:1.6px solid var(--ln);outline-offset:-5px}
+.sc2.w-b.bir,.sc2.w-b.eag,.sc2.w-o.bir,.sc2.w-o.eag,.sc2.w-v.bir,.sc2.w-v.eag{--ln:#F5C542}
 .sc2.w-b{background:var(--bags);color:#fff} .sc2.w-o{background:var(--rojo2);color:#fff} .sc2.w-y{background:var(--amarfill);color:#241a00} .sc2.w-r{background:var(--restofill);color:#241a00} .sc2.w-v{background:var(--verde);color:#fff}
 :root[data-theme="dark"] .sc2.w-b,:root[data-theme="dark"] .sc2.w-o{color:#050C18}
 .leyenda b.sc2{width:18px;height:18px;font-size:10.5px;margin-right:5px;vertical-align:-4px;outline-offset:-3.6px}
@@ -1675,7 +1689,7 @@ V.partidas.after = () => {
 /* PLANILLA DE JUGADORES: todas las estadísticas en columnas, por temporada o de siempre, ordenable */
 const COLS_PLANTEL=[
   ["fechas","Fechas","jugadas",1],["gan","Ganó","fechas ganadas",1],["top3","Top 3","",1],["pts","Puntos","del Tour",1],
-  ["gprom","Gross","promedio",-1],["gmej","Mejor","gross",-1],["nprom","Neto","promedio",-1],["hch","Hdc Ch.","8 de 20",-1],
+  ["gprom","Gross","promedio",-1],["gmej","Mejor","gross",-1],["nprom","Neto","promedio",-1],["hch","Hdc Ch.","8 de 20",-1],["ult","Últ. hdc","jugado",-1],["dif","Dif.","Hdc Ch. − últ.",-1],
   ["eag","Águilas","",1],["bir","Birdies","",1],["par","Pares","",1],["bog","Bogeys","",1],["dbl","Dobles+","",1],
   ["pctpar","Par o -","% de hoyos",1],["p3","Par 3","prom. s/par",-1],["p4","Par 4","prom. s/par",-1],["p5","Par 5","prom. s/par",-1]];
 function datosPlantel(anio){
@@ -1692,8 +1706,11 @@ function datosPlantel(anio){
     const prom=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
     const ult=v.slice().sort((a,b)=>b.f.t-a.f.t||b.f.n-a.f.n).slice(0,20).map(x=>x.gross-x.c.parT).sort((a,b)=>a-b).slice(0,8);
     const netos=rr.map(r=>r.neto).filter(x=>x!=null);
+    const fOrd=r=>{ const f=DB.F.get(r.fid)||{}; return (f.t||r.t)*100+(f.n||0); };
+    const ultR=rr.filter(r=>r.hcp!=null).sort((a,b)=>fOrd(b)-fOrd(a))[0];
     return {jid, nombre:nom(jid), fechas:rr.length, gan:W.filter(x=>x.r.jid===jid).length, top3:T.filter(x=>x===jid).length, pts:ptsDe(jid),
       gprom:prom(v.map(x=>x.gross)), gmej:v.length?Math.min(...v.map(x=>x.gross)):null, nprom:prom(netos), hch:prom(ult),
+      ult:ultR?ultR.hcp:null, dif:(prom(ult)!=null&&ultR)?prom(ult)-ultR.hcp:null, vueltas:v.length,
       ...t, pctpar:hoyos?(t.eag+t.bir+t.par)/hoyos*100:null, p3:prom(tipo[3]), p4:prom(tipo[4]), p5:prom(tipo[5])};
   });
 }
@@ -1704,14 +1721,28 @@ V.plantel = () => {
     const x=a[F.col], y=b[F.col]; if(x==null&&y==null) return a.nombre.localeCompare(b.nombre); if(x==null) return 1; if(y==null) return -1;
     return (x-y)*F.dir || a.nombre.localeCompare(b.nombre); });
   const yo=+S.ses.jugador.id;
-  const f1=(k,v)=>v==null?"–":k==="pctpar"?Math.round(v)+"%":(k==="p3"||k==="p4"||k==="p5")?(v>0?"+":"")+v.toFixed(2).replace(".",","):(k==="gprom"||k==="nprom"||k==="hch")?fmtH(v):(k==="pts"?fmt(v):String(v));
+  const f1=(k,v)=>v==null?"–":k==="pctpar"?Math.round(v)+"%":(k==="p3"||k==="p4"||k==="p5")?(v>0?"+":"")+v.toFixed(2).replace(".",","):k==="dif"?`<span class="${v<0?"mejor":v>0?"peor":""}">${v>0?"+":""}${fmtH(v)}</span>`:(k==="gprom"||k==="nprom"||k==="hch"||k==="ult")?fmtH(v):(k==="pts"?fmt(v):String(v));
+  /* evolución por temporada: flecha verde si mejoró respecto del año anterior, roja si empeoró */
+  const MEJOR={fechas:1,gan:1,top3:1,pts:1,gprom:-1,gmej:-1,nprom:-1,hch:-1,ult:-1,dif:-1,eag:1,bir:1,par:1,bog:-1,dbl:-1,pctpar:1,p3:-1,p4:-1,p5:-1};
+  const POR_VUELTA=new Set(["eag","bir","par","bog","dbl"]);
+  const flecha=(k,act,ant)=>{ if(!ant) return "";
+    let a=act[k], b=ant[k]; if(a==null||b==null) return "";
+    if(POR_VUELTA.has(k)){ if(!act.vueltas||!ant.vueltas) return ""; a=a/act.vueltas; b=b/ant.vueltas; }
+    const d=(a-b)*MEJOR[k]; if(Math.abs(a-b)<1e-9) return `<i class="fl igual" title="igual">=</i>`;
+    return `<i class="fl ${d>0?"sube":"baja"}" title="${d>0?"mejoró":"empeoró"}">${a>b?"▲":"▼"}</i>`; };
+  const evolucion=jid=>{ const anios=DB.temporadas.slice().sort((a,b)=>a-b); let ant=null;
+    const filasA=anios.map(t=>{ const x=datosPlantel(t).find(f=>f.jid===jid); if(!x) return "";
+      const html=`<tr class="evo"><td class="pl-j"><span class="pl-n"></span><span class="evo-a">${t}</span></td>${COLS_PLANTEL.map(([k])=>`<td class="${F.col===k?"on":""}">${f1(k,x[k])}${flecha(k,x,ant)}</td>`).join("")}</tr>`;
+      ant=x; return html; }).join("");
+    return filasA+`<tr class="evo pie"><td class="pl-j" colspan="1"><a class="lk" href="#/jugador/${jid}">Ver perfil ›</a></td><td colspan="${COLS_PLANTEL.length}" class="evo-nota">Flecha verde: mejoró respecto del año anterior · roja: empeoró. Águilas, birdies, pares, bogeys y dobles se comparan por vuelta.</td></tr>`; };
   return `<h1>Jugadores</h1>
-  <p class="lead">Las estadísticas de cada jugador en el Tour. Tocá el título de una columna para ordenar; tocalo de nuevo para invertir el orden.</p>
+  <p class="lead">Las estadísticas de cada jugador en el Tour. Tocá el título de una columna para ordenar; tocalo de nuevo para invertir el orden.${F.anio?" Tocá un jugador para ver su perfil.":" En <b>Todos</b>, tocá un jugador para ver su evolución año por año."}</p>
   <div class="pcts anios"><button data-anio="" class="${!F.anio?"on":""}">Todos</button>${DB.temporadas.map(t=>`<button data-anio="${t}" class="${F.anio===t?"on":""}">${t}</button>`).join("")}</div>
   <div class="card pl-wrap"><div class="pl-scroll"><table class="pl-t"><thead><tr><th class="pl-j" data-col="nombre">Jugador${F.col==="nombre"?(F.dir>0?" ▲":" ▼"):""}</th>
     ${COLS_PLANTEL.map(([k,t,sub])=>`<th data-col="${k}" class="${F.col===k?"on":""}"><span>${t}${F.col===k?(F.dir>0?" ▲":" ▼"):""}</span>${sub?`<small>${sub}</small>`:""}</th>`).join("")}</tr></thead>
-    <tbody>${filas.map((f,i)=>`<tr data-pj="${f.jid}" class="${f.jid===yo?"mia":""}"><td class="pl-j"><span class="pl-n">${i+1}</span>${av(f.jid,"sm")}<b>${esc(f.nombre)}</b></td>
-      ${COLS_PLANTEL.map(([k])=>`<td class="${F.col===k?"on":""}">${f1(k,f[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>
+    <tbody>${filas.map((f,i)=>{ const abierto=!F.anio&&F.abierto===f.jid;
+      return `<tr data-pj="${f.jid}" class="${f.jid===yo?"mia":""} ${abierto?"abierto":""}"><td class="pl-j"><span class="pl-n">${i+1}</span>${av(f.jid,"sm")}<b>${esc(f.nombre)}</b>${!F.anio?`<i class="pl-car">${abierto?"▾":"▸"}</i>`:""}</td>
+      ${COLS_PLANTEL.map(([k])=>`<td class="${F.col===k?"on":""}">${f1(k,f[k])}</td>`).join("")}</tr>${abierto?evolucion(f.jid):""}`; }).join("")}</tbody></table></div></div>
   <p class="small muted" style="margin-top:8px">${filas.length} jugadores${F.anio?" en "+F.anio:" en todas las temporadas"}. Birdies, pares y bogeys salen de las tarjetas completas; Hdc Ch. es el promedio de las 8 mejores de las últimas 20 (golpes sobre el par); "s/par" es el promedio de golpes sobre el par en ese tipo de hoyo.</p>`;
 };
 V.plantel.after = () => {
@@ -1719,7 +1750,9 @@ V.plantel.after = () => {
   document.querySelectorAll(".pl-t th[data-col]").forEach(th=>th.onclick=()=>{ const k=th.dataset.col, def=COLS_PLANTEL.find(c=>c[0]===k);
     if(S.plantel.col===k) S.plantel.dir*=-1; else { S.plantel.col=k; S.plantel.dir=k==="nombre"?1:(def?(def[3]>0?-1:1):1); }
     if(k==="nombre"){ /* orden alfabético */ } pintar(); });
-  document.querySelectorAll(".pl-t tr[data-pj]").forEach(r=>r.onclick=()=>{ location.hash="#/jugador/"+r.dataset.pj; });
+  document.querySelectorAll(".pl-t tr[data-pj]").forEach(r=>r.onclick=()=>{
+    if(S.plantel.anio){ location.hash="#/jugador/"+r.dataset.pj; return; }
+    const j=+r.dataset.pj; S.plantel.abierto=S.plantel.abierto===j?null:j; pintar(); });
 };
 /* radar: compara los perfiles de juego de dos jugadores */
 function perfilRadar(id){
@@ -2017,7 +2050,7 @@ const claseGolpe=(r,h)=>{ const g=r?r[h]:0; return g>=2?"rg2":g?"rg1":""; };
 const formaGolpe=(g,par)=>{ const d=g-par; return d<=-2?"eag":d===-1?"bir":d===0?"par":d===1?"bog":"dbl"; };
 const leyenda=(pend,estilo)=>`<div class="leyenda">${estilo==="gbk"
   ?`<span><b class="sc gbk bir">3</b>birdie o mejor</span><span><b class="sc gbk par">4</b>par</span><span><b class="sc gbk bog">5</b>bogey</span><span><b class="sc gbk dbl">6</b>doble o peor</span>`
-  :`<span><b class="sc2 bir">3</b>birdie</span><span><b class="sc2 eag">2</b>águila</span><span><b class="sc2 bog">5</b>bogey</span><span><b class="sc2 dbl">6</b>doble o peor</span><span><b class="sc2 par w-b">4</b>ganó el hoyo</span>`}
+  :`<span><b class="sc2 bir">3</b>birdie (aro dorado)</span><span><b class="sc2 eag">2</b>águila</span><span><b class="sc2 bog">5</b>bogey</span><span><b class="sc2 dbl">6</b>doble o peor</span><span><b class="sc2 par w-b">4</b>ganó el hoyo</span>`}
   ${estilo==="gbk"?`<span><i class="gpt"></i>recibe golpe</span><span><i class="gpt dos"></i>recibe dos</span>`:`<span><i></i>recibe golpe</span><span><i class="dos"></i>recibe dos</span>`}${pend?`<span><i class="pd"></i>guardado en el teléfono</span>`:""}</div>`;
 function editorHcp(o){
   const rec=golpesJuego(o.base,o.pct,o.modo), idxOk=o.idx&&o.idx.length===18&&o.idx.every(x=>x>=1);
