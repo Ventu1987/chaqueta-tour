@@ -862,6 +862,9 @@ table.tarjeta.gbkt td.rg2::after{box-shadow:-7px 0 0 var(--ink2)}
 .sc2.bir,.sc2.eag{--ln:var(--gold);box-shadow:inset 0 0 0 2px var(--ln)}
 .sc2.eag{outline:1.6px solid var(--ln);outline-offset:-5px}
 .sc2.w-b.bir,.sc2.w-b.eag,.sc2.w-o.bir,.sc2.w-o.eag,.sc2.w-v.bir,.sc2.w-v.eag{--ln:#F5C542}
+/* águila: toda la casilla en amarillo, bien distinta del birdie */
+.sc2.eag{background:#F5C542!important;color:#1d1500!important;box-shadow:none!important;outline:none!important}
+.sc2.eag.w-b,.sc2.eag.w-o,.sc2.eag.w-y,.sc2.eag.w-v,.sc2.eag.w-r{box-shadow:inset 0 0 0 2px #fff!important}
 .sc2.w-b{background:var(--bags);color:#fff} .sc2.w-o{background:var(--rojo2);color:#fff} .sc2.w-y{background:var(--amarfill);color:#241a00} .sc2.w-r{background:var(--restofill);color:#241a00} .sc2.w-v{background:var(--verde);color:#fff}
 :root[data-theme="dark"] .sc2.w-b,:root[data-theme="dark"] .sc2.w-o{color:#050C18}
 .leyenda b.sc2{width:18px;height:18px;font-size:10.5px;margin-right:5px;vertical-align:-4px;outline-offset:-3.6px}
@@ -2050,7 +2053,7 @@ const claseGolpe=(r,h)=>{ const g=r?r[h]:0; return g>=2?"rg2":g?"rg1":""; };
 const formaGolpe=(g,par)=>{ const d=g-par; return d<=-2?"eag":d===-1?"bir":d===0?"par":d===1?"bog":"dbl"; };
 const leyenda=(pend,estilo)=>`<div class="leyenda">${estilo==="gbk"
   ?`<span><b class="sc gbk bir">3</b>birdie o mejor</span><span><b class="sc gbk par">4</b>par</span><span><b class="sc gbk bog">5</b>bogey</span><span><b class="sc gbk dbl">6</b>doble o peor</span>`
-  :`<span><b class="sc2 bir">3</b>birdie (aro dorado)</span><span><b class="sc2 eag">2</b>águila</span><span><b class="sc2 bog">5</b>bogey</span><span><b class="sc2 dbl">6</b>doble o peor</span><span><b class="sc2 par w-b">4</b>ganó el hoyo</span>`}
+  :`<span><b class="sc2 bir">3</b>birdie (aro dorado)</span><span><b class="sc2 eag">2</b>águila (amarillo)</span><span><b class="sc2 bog">5</b>bogey</span><span><b class="sc2 dbl">6</b>doble o peor</span><span><b class="sc2 par w-b">4</b>ganó el hoyo</span>`}
   ${estilo==="gbk"?`<span><i class="gpt"></i>recibe golpe</span><span><i class="gpt dos"></i>recibe dos</span>`:`<span><i></i>recibe golpe</span><span><i class="dos"></i>recibe dos</span>`}${pend?`<span><i class="pd"></i>guardado en el teléfono</span>`:""}</div>`;
 function editorHcp(o){
   const rec=golpesJuego(o.base,o.pct,o.modo), idxOk=o.idx&&o.idx.length===18&&o.idx.every(x=>x>=1);
