@@ -1065,6 +1065,79 @@ td.rg2{background:radial-gradient(circle at 50% 50%,var(--golpe) 0 9px,var(--gol
 .fresco.viejo{color:var(--red);font-weight:700}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<style id="tarjeta-final">
+/* ═══ Tarjeta de juego: un solo estilo, prolijo, para todas las modalidades ═══ */
+table.tarjeta{font-size:12.5px}
+table.tarjeta td{height:36px}
+table.tarjeta .l{width:84px}
+/* recibe golpe: un puntito debajo del número, nunca encima de la forma */
+table.tarjeta td.rg1,table.tarjeta td.rg2,table.tarjeta.gbkt td.rg1,table.tarjeta.gbkt td.rg2{background:none!important;position:relative}
+table.tarjeta td.rg1::after,table.tarjeta td.rg2::after,table.tarjeta.gbkt td.rg1::after,table.tarjeta.gbkt td.rg2::after{content:"";position:absolute;top:auto;right:auto;left:50%;bottom:2px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--ink3);box-shadow:none}
+table.tarjeta td.rg2::after,table.tarjeta.gbkt td.rg2::after{margin-left:-5px;box-shadow:6px 0 0 var(--ink3)}
+/* formas: siempre más chicas que la columna, con aire entre una y otra */
+table.tarjeta .sc,table.tarjeta .sc2{width:21px;height:21px;font-size:12px;vertical-align:middle}
+.sc2.bir{box-shadow:inset 0 0 0 1.8px var(--ln)}
+.sc2.bog,.sc2.dbl{border-radius:4px}
+.sc2.dbl{outline-offset:-4.2px}
+.sc.gbk.eag{outline-offset:-4px}
+@media (min-width:400px){ table.tarjeta .sc,table.tarjeta .sc2{width:23px;height:23px;font-size:12.5px} }
+/* fila Estado: letra condensada para que "2UP" entre en su columna sin pegarse a la siguiente */
+table.tarjeta tr.clas td{font-family:var(--cond);font-size:10.5px;letter-spacing:-.1px;font-weight:700}
+table.tarjeta tr.clas td.l{font-family:inherit;font-size:12px;letter-spacing:0}
+/* leyenda: dos renglones alineados (resultado / golpes) */
+.leyenda.lg2{display:block;margin:8px 2px 12px}
+.leyenda.lg2 > div{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.leyenda.lg2 > div + div{margin-top:6px}
+.leyenda .lg{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.leyenda .lg em{font-style:normal;font-size:12px;color:var(--ink2)}
+.leyenda .lg b.sc,.leyenda .lg b.sc2{width:18px;height:18px;font-size:10.5px;margin:0;vertical-align:middle}
+.leyenda .lg b.sc2.eag{outline-offset:-3.4px}
+.leyenda .lg b.sc2.dbl{outline-offset:-3.6px}
+.leyenda i.lgd{display:inline-block;position:relative;width:12px;height:10px;margin:0;background:none;border-radius:0;box-shadow:none}
+.leyenda i.lgd::after{content:"";position:absolute;left:4px;bottom:1px;width:4px;height:4px;border-radius:50%;background:var(--ink3)}
+.leyenda i.lgd.dos::after{left:1px;box-shadow:6px 0 0 var(--ink3)}
+
+/* selector de fechas: todas visibles (pasan de renglón) */
+.pills{flex-wrap:wrap!important;overflow:visible!important;gap:6px!important}
+.pills a{flex:none}
+/* cuadros de premios de la fecha: siempre foto y nombre en la misma línea, el nombre se corta con "…" */
+.rc{flex-wrap:wrap;align-items:center;min-width:0}
+.rc b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recs > *{min-width:0}
+/* tablas anchas: sombra a la derecha cuando hay más columnas para deslizar */
+.tw{background:linear-gradient(to right,var(--card) 30%,transparent),linear-gradient(to left,var(--card) 30%,transparent) right/22px 100% no-repeat,
+  radial-gradient(farthest-side at 100% 50%,rgba(0,0,0,.28),transparent) right/10px 100% no-repeat;
+  background-attachment:local,local,scroll;background-size:22px 100%,22px 100%,10px 100%;background-position:left,right,right;background-repeat:no-repeat}
+.segs{flex-wrap:wrap}
+.lb.lbf table{width:100%}
+@media (max-width:440px){
+  .lb.lbf .col-hcp{display:none}
+  .lb.lbf th,.lb.lbf td{padding-left:5px;padding-right:5px}
+  .lb.lbf td.l{white-space:normal}
+  .lb.lbf .pcell .av{width:30px;height:30px}
+  .lb.lbf .pcell b,.lb.lbf .pl .n{font-size:13.5px;white-space:normal;line-height:1.2}
+  .lb.lbf .ps{width:20px;font-size:15px}
+}
+@media (max-width:640px){ .nav2{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent);padding-right:28px} }
+.pills a.on{background:var(--gold)!important;border-color:var(--gold)!important;color:#0A1F3D!important}
+
+/* ═══ Planilla de jugadores: títulos fijos arriba y nombres fijos a la izquierda ═══ */
+.pl-scroll{overflow:auto;max-height:calc(100vh - 230px);max-height:calc(100dvh - 230px);overscroll-behavior:contain}
+table.pl-t{border-collapse:separate;border-spacing:0}
+table.pl-t thead th{position:sticky;top:0;z-index:3;background:var(--soft);box-shadow:inset 0 -1px 0 var(--line)}
+table.pl-t thead th.pl-j{left:0;z-index:5}
+table.pl-t td.pl-j{display:table-cell;position:sticky;left:0;z-index:2;min-width:158px;max-width:158px;width:158px;
+  background:var(--card);box-shadow:inset -1px 0 0 var(--line),4px 0 8px -4px rgba(0,0,0,.35)}
+table.pl-t thead th.pl-j{box-shadow:inset -1px 0 0 var(--line),inset 0 -1px 0 var(--line),4px 0 8px -4px rgba(0,0,0,.35)}
+.pl-jc{display:flex;align-items:center;gap:8px;min-width:0}
+.pl-jc b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+/* fondos sólidos en la columna fija: los números nunca se ven por debajo del nombre */
+table.pl-t tbody tr:hover td.pl-j,table.pl-t tr.abierto td.pl-j,table.pl-t tr.evo td.pl-j{background:var(--soft)}
+table.pl-t tr.mia td.pl-j{background:linear-gradient(var(--goldbg),var(--goldbg)),var(--card);box-shadow:inset 4px 0 0 var(--gold),inset -1px 0 0 var(--line),4px 0 8px -4px rgba(0,0,0,.35)}
+table.pl-t td.on{background:linear-gradient(color-mix(in srgb,var(--gold) 9%,transparent),color-mix(in srgb,var(--gold) 9%,transparent)),var(--card)}
+table.pl-t tr.mia td{background:linear-gradient(var(--goldbg),var(--goldbg)),var(--card)}
+table.pl-t thead th{padding-top:10px;padding-bottom:10px}
+</style>
 </head>
 <body>
 <div id="app"><div class="load">Cargando…</div></div>
@@ -1463,11 +1536,11 @@ V.fecha = (arg) => {
   const win=jug.filter(r=>r.pos===1);
   const VV=vueltas().filter(v=>v.f.fid===f.fid); const bg=VV.length?VV.reduce((a,v)=>v.gross<a.gross?v:a):null;
   const ba=jug.filter(r=>r.ba), ld=jug.filter(r=>r.ld), bsd=jug.filter(r=>r.bg);
-  const tbl=`<div class="lb"><div class="tw"><table>
-    <thead><tr><th class="l">Pos &nbsp;Jugador</th><th>A par</th><th>Neto</th><th>Gross</th><th>HCP</th><th>Puntos</th></tr></thead>
-    <tbody>${jug.map(r=>`<tr class="${r.pos===1?"lead1":""}"><td class="l"><div class="pcell"><span class="ps">${r.pos??(r.est==="WO"?"WO":"AB")}</span>${pl(r.jid,r.est==="JUGO"?"":r.est==="WO"?"WO":"Abandonó")}</div></td>
-      <td class="topar ${r.neto!=null&&r.neto-P<0?"under":""}">${r.est==="JUGO"&&r.neto!=null?sgn(r.neto-P):"—"}</td><td>${r.est==="JUGO"?(r.neto??"—"):"—"}</td><td>${r.gross??"—"}</td><td class="muted">${r.hcp??"—"}</td>
-      <td class="pts ${r.total<0?"neg":""}">${fmt(r.total)}${r.ba?`<span class="chip b">approach</span>`:""}${r.ld?`<span class="chip b">long drive</span>`:""}</td></tr>`).join("")}</tbody></table></div></div>
+  const tbl=`<div class="lb lbf"><div class="tw"><table>
+    <thead><tr><th class="l">Pos &nbsp;Jugador</th><th>A par</th><th>Neto</th><th>Gross</th><th class="col-hcp">HCP</th><th>Puntos</th></tr></thead>
+    <tbody>${jug.map(r=>`<tr class="${r.pos===1?"lead1":""}"><td class="l"><div class="pcell"><span class="ps">${r.pos??(r.est==="WO"?"WO":"AB")}</span>${pl(r.jid,r.est==="JUGO"?[r.ba?"approach":"",r.ld?"long drive":""].filter(Boolean).join(" · "):r.est==="WO"?"WO":"Abandonó")}</div></td>
+      <td class="topar ${r.neto!=null&&r.neto-P<0?"under":""}">${r.est==="JUGO"&&r.neto!=null?sgn(r.neto-P):"—"}</td><td>${r.est==="JUGO"?(r.neto??"—"):"—"}</td><td>${r.gross??"—"}</td><td class="muted col-hcp">${r.hcp??"—"}</td>
+      <td class="pts ${r.total<0?"neg":""}">${fmt(r.total)}</td></tr>`).join("")}</tbody></table></div></div>
     ${aus.length?`<p class="small muted" style="margin:8px 4px 0">No jugaron: ${aus.map(r=>esc(nom(r.jid))+(r.medal?` (${fmt(r.medal)})`:"")).join(", ")}.</p>`:""}`;
   const par=c?c.par:[];
   const cel=(g,h)=>{ let k=tipoHoyo(g,par[h]); if(k==="db"&&g>=10) k="db2";
@@ -1735,16 +1808,16 @@ V.plantel = () => {
     return `<i class="fl ${d>0?"sube":"baja"}" title="${d>0?"mejoró":"empeoró"}">${a>b?"▲":"▼"}</i>`; };
   const evolucion=jid=>{ const anios=DB.temporadas.slice().sort((a,b)=>a-b); let ant=null;
     const filasA=anios.map(t=>{ const x=datosPlantel(t).find(f=>f.jid===jid); if(!x) return "";
-      const html=`<tr class="evo"><td class="pl-j"><span class="pl-n"></span><span class="evo-a">${t}</span></td>${COLS_PLANTEL.map(([k])=>`<td class="${F.col===k?"on":""}">${f1(k,x[k])}${flecha(k,x,ant)}</td>`).join("")}</tr>`;
+      const html=`<tr class="evo"><td class="pl-j"><div class="pl-jc"><span class="pl-n"></span><span class="evo-a">${t}</span></div></td>${COLS_PLANTEL.map(([k])=>`<td class="${F.col===k?"on":""}">${f1(k,x[k])}${flecha(k,x,ant)}</td>`).join("")}</tr>`;
       ant=x; return html; }).join("");
     return filasA+`<tr class="evo pie"><td class="pl-j" colspan="1"><a class="lk" href="#/jugador/${jid}">Ver perfil ›</a></td><td colspan="${COLS_PLANTEL.length}" class="evo-nota">Flecha verde: mejoró respecto del año anterior · roja: empeoró. Águilas, birdies, pares, bogeys y dobles se comparan por vuelta.</td></tr>`; };
   return `<h1>Jugadores</h1>
   <p class="lead">Las estadísticas de cada jugador en el Tour. Tocá el título de una columna para ordenar; tocalo de nuevo para invertir el orden.${F.anio?" Tocá un jugador para ver su perfil.":" En <b>Todos</b>, tocá un jugador para ver su evolución año por año."}</p>
   <div class="pcts anios"><button data-anio="" class="${!F.anio?"on":""}">Todos</button>${DB.temporadas.map(t=>`<button data-anio="${t}" class="${F.anio===t?"on":""}">${t}</button>`).join("")}</div>
-  <div class="card pl-wrap"><div class="pl-scroll"><table class="pl-t"><thead><tr><th class="pl-j" data-col="nombre">Jugador${F.col==="nombre"?(F.dir>0?" ▲":" ▼"):""}</th>
+  <div class="card pl-wrap"><div class="pl-scroll" id="plScroll"><table class="pl-t"><thead><tr><th class="pl-j" data-col="nombre">Jugador${F.col==="nombre"?(F.dir>0?" ▲":" ▼"):""}</th>
     ${COLS_PLANTEL.map(([k,t,sub])=>`<th data-col="${k}" class="${F.col===k?"on":""}"><span>${t}${F.col===k?(F.dir>0?" ▲":" ▼"):""}</span>${sub?`<small>${sub}</small>`:""}</th>`).join("")}</tr></thead>
     <tbody>${filas.map((f,i)=>{ const abierto=!F.anio&&F.abierto===f.jid;
-      return `<tr data-pj="${f.jid}" class="${f.jid===yo?"mia":""} ${abierto?"abierto":""}"><td class="pl-j"><span class="pl-n">${i+1}</span>${av(f.jid,"sm")}<b>${esc(f.nombre)}</b>${!F.anio?`<i class="pl-car">${abierto?"▾":"▸"}</i>`:""}</td>
+      return `<tr data-pj="${f.jid}" class="${f.jid===yo?"mia":""} ${abierto?"abierto":""}"><td class="pl-j"><div class="pl-jc"><span class="pl-n">${i+1}</span>${av(f.jid,"sm")}<b>${esc(f.nombre)}</b>${!F.anio?`<i class="pl-car">${abierto?"▾":"▸"}</i>`:""}</div></td>
       ${COLS_PLANTEL.map(([k])=>`<td class="${F.col===k?"on":""}">${f1(k,f[k])}</td>`).join("")}</tr>${abierto?evolucion(f.jid):""}`; }).join("")}</tbody></table></div></div>
   <p class="small muted" style="margin-top:8px">${filas.length} jugadores${F.anio?" en "+F.anio:" en todas las temporadas"}. Birdies, pares y bogeys salen de las tarjetas completas; Hdc Ch. es el promedio de las 8 mejores de las últimas 20 (golpes sobre el par); "s/par" es el promedio de golpes sobre el par en ese tipo de hoyo.</p>`;
 };
@@ -2051,10 +2124,14 @@ const tira=r=>`<div class="tira">${r.map((g,i)=>`<span class="${g>=2?"g2":g?"g1"
 const claseGolpe=(r,h)=>{ const g=r?r[h]:0; return g>=2?"rg2":g?"rg1":""; };
 /* forma del golpe según el par: águila o mejor, birdie, par, bogey, doble bogey o peor */
 const formaGolpe=(g,par)=>{ const d=g-par; return d<=-2?"eag":d===-1?"bir":d===0?"par":d===1?"bog":"dbl"; };
-const leyenda=(pend,estilo)=>`<div class="leyenda">${estilo==="gbk"
-  ?`<span><b class="sc gbk bir">3</b>birdie o mejor</span><span><b class="sc gbk par">4</b>par</span><span><b class="sc gbk bog">5</b>bogey</span><span><b class="sc gbk dbl">6</b>doble o peor</span>`
-  :`<span><b class="sc2 bir">3</b>birdie (aro dorado)</span><span><b class="sc2 eag">2</b>águila (amarillo)</span><span><b class="sc2 bog">5</b>bogey</span><span><b class="sc2 dbl">6</b>doble o peor</span><span><b class="sc2 par w-b">4</b>ganó el hoyo</span>`}
-  ${estilo==="gbk"?`<span><i class="gpt"></i>recibe golpe</span><span><i class="gpt dos"></i>recibe dos</span>`:`<span><i></i>recibe golpe</span><span><i class="dos"></i>recibe dos</span>`}${pend?`<span><i class="pd"></i>guardado en el teléfono</span>`:""}</div>`;
+const leyenda=(pend,estilo)=>{
+  const it=(sw,t)=>`<span class="lg">${sw}<em>${t}</em></span>`;
+  const res = estilo==="gbk"
+    ? [it(`<b class="sc gbk bir">3</b>`,"birdie o mejor"),it(`<b class="sc gbk par">4</b>`,"par"),it(`<b class="sc gbk bog">5</b>`,"bogey"),it(`<b class="sc gbk dbl">6</b>`,"doble o peor")]
+    : [it(`<b class="sc2 w-b par">4</b>`,"ganó el hoyo"),it(`<b class="sc2 bir">3</b>`,"birdie"),it(`<b class="sc2 eag">2</b>`,"águila"),it(`<b class="sc2 bog">5</b>`,"bogey"),it(`<b class="sc2 dbl">6</b>`,"doble o peor")];
+  const extra=[it(`<i class="lgd"></i>`,"recibe golpe"),it(`<i class="lgd dos"></i>`,"recibe dos")].concat(pend?[it(`<i class="pd"></i>`,"guardado en el teléfono")]:[]);
+  return `<div class="leyenda lg2"><div>${res.join("")}</div><div>${extra.join("")}</div></div>`;
+};
 function editorHcp(o){
   const rec=golpesJuego(o.base,o.pct,o.modo), idxOk=o.idx&&o.idx.length===18&&o.idx.every(x=>x>=1);
   return `<div class="small muted">Porcentaje del handicap</div>
