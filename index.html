@@ -1063,6 +1063,23 @@ td.rg2{background:radial-gradient(circle at 50% 50%,var(--golpe) 0 9px,var(--gol
 .aviso.rojo{border-color:var(--red);color:var(--red)}
 .fresco{font-size:12.5px;text-align:center;color:var(--ink3);margin:10px 0 0}
 .fresco.viejo{color:var(--red);font-weight:700}
+/* carga arriba y tarjetas plegables */
+h1.h1am{margin-bottom:10px}
+.card.carga .ch{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.card.carga .ch h3{margin:0}
+.ch-h{font-size:14px;color:var(--ink2)} .ch-h b{font-size:20px;color:var(--ink);font-weight:700}
+.tarjd{margin:12px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tarjd>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tarjd>summary::-webkit-details-marker{display:none}
+.td-t{flex:none;font-weight:700;font-size:15px}
+.td-r{flex:1;min-width:0;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:3px 12px;font-size:12.5px;font-weight:600}
+.td-r b{color:var(--ink);margin-left:5px} .td-r small{color:var(--ink3);font-weight:500;margin-left:2px;font-size:11px}
+.td-c{flex:none;font-style:normal;font-size:20px;line-height:1;color:var(--ink3);transition:transform .15s}
+.tarjd[open] .td-c{transform:rotate(90deg)}
+.tarjd[open]>summary{border-bottom:1px solid var(--line)}
+.td-b{padding:10px 8px 12px}
+.td-b .tw{margin-top:0}
+.am-info{margin:4px 2px 8px}
 /* arreglos de la revisión */
 .stc.falta{color:var(--gold)}
 @media (max-width:640px){ .nav2.alfin{-webkit-mask-image:none;mask-image:none} }
@@ -2081,6 +2098,23 @@ async function enviar_(){
 function pendDe(mid){ const o={}; pendientes().forEach(g=>{ if(g.match_id===mid) o[g.jugador_id+"|"+g.hoyo]=g.golpes; }); return o; }
 const kB=(mid,j,h)=>mid+"|"+j+"|"+h;
 
+/* hoyo donde retomar la carga: el siguiente al último hoyo que tiene a todos cargados
+   (cuenta también lo que está guardado en el teléfono y todavía no se mandó) */
+function hoyoSiguiente(ids, golpe, mid){
+  const pd=pendDe(mid); let ult=0;
+  for(let h=1;h<=18;h++) if(ids.every(j=>golpe(j,h-1)!=null||pd[j+"|"+h]!=null)) ult=h;
+  return Math.min(18,ult+1);
+}
+const hoyoAm=p=>hoyoSiguiente(p.jugadores.map(j=>j.id),(id,i)=>(p.jugadores.find(x=>x.id===id)||{golpes:[]}).golpes[i],p.partida_id);
+function hoyoMatch(m){ const t={}; m.tarjeta.forEach(x=>t[String(x.jugador_id)]=x.golpes);
+  return hoyoSiguiente((m.una_bola?[m.bags[0],m.resto[0]]:m.bags.concat(m.resto)).map(String),(j,i)=>(t[j]||[])[i],m.match_id); }
+/* tarjetas hoyo a hoyo en un desplegable; se acuerda si lo dejaste abierto */
+const tarjAbierta=()=>{ try{ return localStorage.getItem("ct-tarj")==="1"; }catch(e){ return false; } };
+const tarjetaPlegable=(abierta,resumen,cuerpo)=>`<details class="tarjd" id="tarjD" ${abierta?"open":""}>
+  <summary><span class="td-t">Tarjetas</span><span class="td-r">${resumen}</span><i class="td-c" aria-hidden="true">›</i></summary>
+  <div class="td-b">${cuerpo}</div></details>`;
+const totTarj=g=>{ const v=(g||[]).filter(x=>x!=null); return v.length?`<b>${v.reduce((a,b)=>a+b,0)}</b><small>${v.length<18?v.length+"h":""}</small>`:"<b>–</b>"; };
+
 /* ═══ CARGA DE UN HOYO (Ryder y amistosos) ═══
    Cada jugador se confirma tocando el número o los − / +. "Guardar hoyo" manda solo los confirmados. */
 function bloqueCarga(o){
@@ -2096,8 +2130,8 @@ function bloqueCarga(o){
       <div class="step"><button data-k="${esc(k)}" data-d="-1" aria-label="menos">−</button><b data-v="${esc(k)}" class="${(!tocado&&p==null&&g==null)?"gris":""}">${v}</b><button data-k="${esc(k)}" data-d="1" aria-label="más">+</button></div></div>`; }).join("");
   const prem=(o.premiosEn?o.premiosEn(h):[]).map(t=>{ const l=(premiosDe(o.premios&&o.premios())[t]||{}).j;
     return `<div class="premio">${ICO.bandera}<div><b>En este hoyo se juega el ${TIPO_PREMIO[t]}</b><span>${l?"Va ganando "+esc(o.nombre(l)):"Todavía nadie lo marcó"}</span></div></div>`; }).join("");
-  return `<div class="card"><h3>Cargar el hoyo</h3><div class="hoyosel">${sel}</div>
-    <div class="small muted">Hoyo ${h} · par ${parH}</div>${prem}${filas}
+  return `<div class="card carga"><div class="ch"><h3>Cargar golpes</h3><span class="ch-h">Hoyo <b>${h}</b> · par ${parH}</span></div>
+    <div class="hoyosel">${sel}</div>${prem}${filas}
     <button class="btn guardarhoyo" id="guardarHoyo">Guardar hoyo ${h}${h<18?" y pasar al "+(h+1):""}</button>
     <div class="err">${esc(S.err)}</div></div>`;
 }
@@ -2110,6 +2144,8 @@ function ligarCarga(o){
     marcar(k, Math.max(1,Math.min(20,(+el.textContent)+(+b.dataset.d)))); });
   document.querySelectorAll(".step b[data-v]").forEach(b=>b.onclick=()=>marcar(b.dataset.v,+b.textContent));
   document.querySelectorAll(".hoyosel button").forEach(b=>b.onclick=()=>{ o.avanzar(+b.dataset.h); S.err=""; pintar(); });
+  const hs=document.querySelector(".hoyosel"), hb=hs&&hs.querySelector("button.on");
+  if(hb) hs.scrollLeft=hb.offsetLeft-hs.offsetLeft-(hs.clientWidth-hb.offsetWidth)/2;
   const gh=document.getElementById("guardarHoyo");
   if(gh) gh.onclick=()=>{
     const t=Date.now(), items=[];
@@ -3053,8 +3089,10 @@ function vistaMatch(){
   <div class="mhead">${hdrMatch({A:{ids:m.bags,nombre:nom,col:"b",sub:"Bags Boys"},B:{ids:m.resto,nombre:nom,col:"r",sub:"Resto del Mundo"},
       lider:m.jugados&&m.estado>0?"A":m.jugados&&m.estado<0?"B":"", res:st.t, est:m.cerrado?"final":(m.jugados?"hoyo "+m.jugados:"por salir")})}<div style="display:none">
   </div></div>
-  ${selSalida}${falta}${aviso}${tramo(1,9)}${tramo(10,18)}${leyenda(pk.size>0,"gbk")}${m.una_bola?"":lineaStb(jug.map(j=>({nombre:nombreLado(j),golpes:tar[String(j)]||[],rep:(m.recibe_hoyo||{})[String(j)],cls:m.bags.map(String).includes(String(j))?"c-b":"c-r"})),par)}
-  ${hcpInfo}${carga}`;
+  ${selSalida}${falta}${aviso}${carga}
+  ${tarjetaPlegable(!puedo||cerradoEv||tarjAbierta(),jug.map(j=>`<span class="c-${m.bags.map(String).includes(String(j))?"b":"r"}">${esc(nombreLado(j))}${totTarj(tar[String(j)])}</span>`).join(""),
+    tramo(1,9)+tramo(10,18)+leyenda(pk.size>0,"gbk")+(m.una_bola?"":lineaStb(jug.map(j=>({nombre:nombreLado(j),golpes:tar[String(j)]||[],rep:(m.recibe_hoyo||{})[String(j)],cls:m.bags.map(String).includes(String(j))?"c-b":"c-r"})),par)))}
+  ${hcpInfo}`;
 }
 
 /* ═══ armado: enlaces ═══ */
@@ -3275,7 +3313,7 @@ async function traerAmistosos(){
 }
 async function traerAmistoso(pid){
   const r=await api("amistoso",{partida_id:pid});
-  if(r&&r.ok){ AM.act=r.partida; }
+  if(r&&r.ok){ AM.act=r.partida; if(AM.ubicar===pid){ AM.hoyo=hoyoAm(r.partida); AM.ubicar=null; } }
   else if(AM.act && AM.act.partida_id===pid){ S.err=r&&r.red?"Sin señal: ves lo último que llegó; los golpes quedan en el teléfono":(r&&r.error||""); }
   else { AM.act=null; S.err=(r&&r.error)||""; }
   pintar();
@@ -3420,16 +3458,18 @@ function vistaAmistoso(){
         guardado:(id,i)=>(p.jugadores.find(x=>x.id===id)||{golpes:[]}).golpes[i], nombre:nomAm, avatarDe:id=>avAm(id),
         premiosEn:h=>premiosHoyo(p,h), premios:()=>p.premios, color:id=>colAm(p,id),
         recibe:id=>(p.jugadores.find(x=>x.id===id)||{}).recibe||0, golpeEn:(id,i)=>((p.jugadores.find(x=>x.id===id)||{}).rep||[])[i]||0, hechoHoyo:i=>p.jugadores.every(j=>j.golpes[i]!=null)}));
+  const enCarga=puedo&&p.estado!=="CERRADA";
+  const tarjetas=tramo(1,9)+tramo(10,18)+leyenda(pkA.size>0,p.modalidad==="LAGUNEADA"?"gbk":"win")+(INDIV(p.modalidad)||p.modalidad==="LAGUNEADA"?"":lineaStb(J.map(j=>({nombre:nomAm(j.id),golpes:j.golpes,rep:j.rep,cls:"c-"+cl(j)})),par));
   return `<button class="btn volver-vivo" id="volverAm">${AM.volver==="#/partidas"?"‹ Amistosos":p.torneo_id?"‹ Torneo":"‹ Vivo"}</button>
-  <h1>${p.torneo_id?`Línea ${p.linea} · ${esc(MODAL[p.modalidad].replace(/ \(.*\)$/,""))}`:MODAL[p.modalidad]}</h1>
-  <p class="lead">${esc(p.cancha.nombre||"")}${p.cancha.recorrido?" "+esc(p.cancha.recorrido):""} · golpes ${p.hcp_modo==="DIFERENCIA"?"por diferencia":"completos"}${pctN(p.porcentaje)!==100?" al "+pctN(p.porcentaje)+"\u00a0%":""}${p.modalidad==="FOURBALL"?` · mejor bola ${p.p_bola}${p.p_suma?` y suma ${p.p_suma}`:""}${p.desempate?" · desempata la 2da pelota":""}`:""}</p>
-  ${lineaPremios(p,nomAm)}
+  <h1 class="h1am">${p.torneo_id?`Línea ${p.linea} · ${esc(MODAL[p.modalidad].replace(/ \(.*\)$/,""))}`:MODAL[p.modalidad]}</h1>
   <div class="mhead">${marcador}</div>
   ${p.falta_hoyo?`<div class="aviso rojo">Falta cargar el hoyo ${p.falta_hoyo}: el match se cuenta hasta ahí.</div>`:""}
-  ${tramo(1,9)}${tramo(10,18)}${leyenda(pkA.size>0,p.modalidad==="LAGUNEADA"?"gbk":"win")}${INDIV(p.modalidad)||p.modalidad==="LAGUNEADA"?"":lineaStb(J.map(j=>({nombre:nomAm(j.id),golpes:j.golpes,rep:j.rep,cls:"c-"+cl(j)})),par)}
-  ${editAm}
   ${carga}
   ${p.estado==="CERRADA"?`<div class="aviso">Partida terminada y guardada: ${esc(p.resumen)}</div>`:""}
+  ${tarjetaPlegable(!enCarga||tarjAbierta(),J.map(j=>`<span class="c-${cl(j)}">${esc(nomAm(j.id))}${totTarj(j.golpes)}</span>`).join(""),tarjetas)}
+  <p class="small muted am-info">${esc(p.cancha.nombre||"")}${p.cancha.recorrido?" "+esc(p.cancha.recorrido):""} · golpes ${p.hcp_modo==="DIFERENCIA"?"por diferencia":"completos"}${pctN(p.porcentaje)!==100?" al "+pctN(p.porcentaje)+"\u00a0%":""}${p.modalidad==="FOURBALL"?` · mejor bola ${p.p_bola}${p.p_suma?` y suma ${p.p_suma}`:""}${p.desempate?" · desempata la 2da pelota":""}`:""}</p>
+  ${lineaPremios(p,nomAm)}
+  ${editAm}
   ${p.torneo_id?`<a class="btn sec" style="display:block;text-align:center;text-decoration:none;margin-top:12px" href="#/torneo/${p.torneo_id}">Ver la tabla del torneo</a>`:`<div class="accs">
     ${p.estado!=="CERRADA"?`<button class="btn" id="cerrarAm">💾 Guardar y terminar</button>`:""}
     ${p.estado==="CERRADA"&&(S.ses.jugador.rol==="admin"||String(p.creador)===String(S.ses.jugador.id))?`<button class="btn sec" id="reabrirAm">✎ Reabrir para corregir</button>`:""}
@@ -3682,6 +3722,7 @@ function ligarShell(tab,r,a){
   document.getElementById("tema").onclick=()=>{ const t=document.documentElement.getAttribute("data-theme")==="light"?"dark":"light";
     document.documentElement.setAttribute("data-theme",t); try{localStorage.setItem("ct-tema",t)}catch(e){} temaMeta(); pintar(); };
   const rc=document.getElementById("recargar"); if(rc) rc.onclick=()=>refrescar(true);
+  const td=document.getElementById("tarjD"); if(td) td.ontoggle=()=>{ try{ localStorage.setItem("ct-tarj",td.open?"1":"0"); }catch(e){} };
   const n2=document.querySelector(".nav2");
   if(n2){ const on=n2.querySelector("a.on"); if(on) n2.scrollLeft=on.offsetLeft-(n2.clientWidth-on.offsetWidth)/2;
     const fin=()=>{ n2.classList.toggle("alfin",n2.scrollLeft+n2.clientWidth>=n2.scrollWidth-4); n2.classList.toggle("alini",n2.scrollLeft<=4); };
@@ -3691,7 +3732,7 @@ function ligarShell(tab,r,a){
   document.querySelectorAll(".tabbar button").forEach(b=>b.onclick=()=>{ S.match=null; S.err=""; if(location.hash===b.dataset.go){ pintar(); scrollTo(0,0); } else location.hash=b.dataset.go; });
   const im=document.getElementById("irMatch");
   if(im) im.onclick=()=>{ const m=document.querySelector(".mrow[data-m]"); const id=m.dataset.m;
-    const mm=S.est.matches.find(x=>x.match_id===id); location.hash="#/vivo"; setTimeout(()=>{ S.match=id; S.hoyo=Math.min(18,(mm.jugados||0)+1); pintar(); },0); };
+    const mm=S.est.matches.find(x=>x.match_id===id); location.hash="#/vivo"; setTimeout(()=>{ S.match=id; S.hoyo=hoyoMatch(mm); pintar(); },0); };
   document.querySelectorAll("[data-irp]").forEach(b=>b.onclick=()=>{ location.hash="#/partida/"+b.dataset.irp; });
   if(tab==="vivo" || tab==="jugar"){ ligar(); ligarAmistosos(); ligarJugar(); ligarTorneo(); }
   else if(tab==="perfil" && DB) V.jugador.after(r==="inicio"?"":a);
@@ -3704,7 +3745,7 @@ function ligar(){
   if(r==="armar"){ ligarArmar(); ligarBorrarEv(); return; }
   document.querySelectorAll(".mrow[data-m]").forEach(row=>row.onclick=()=>{
     S.match=row.dataset.m; const m=S.est.matches.find(x=>x.match_id===S.match);
-    S.hoyo=Math.min(18,(m.jugados||0)+1); pintar();
+    S.hoyo=hoyoMatch(m); pintar();
   });
   const v=document.getElementById("volverV"); if(v) v.onclick=()=>{ S.match=null; pintar(); };
   document.querySelectorAll("[data-otro]").forEach(b=>b.onclick=()=>{ S.match=b.dataset.otro; S.err=""; pintar(); window.scrollTo(0,0); });   /* mismo hoyo, otro cruce de la salida */
@@ -3797,7 +3838,7 @@ addEventListener("hashchange",()=>{ const {r,a}=ruta(); S.match=null;
   if(r==="armar"){ A.eventos=null; A.evento=null; A.nuevo=false; A.cruce=false; }
   if(r==="torneo" && a){ if(!TN.act || TN.act.torneo_id!==a) TN.act=null; traerTorneo(a); }
   if(r==="torneo-nuevo" && !TN.lineas && S.ses) tnNuevo();
-  if(r==="partida"){ if(a && (!AM.act || AM.act.partida_id!==a)){ AM.act=null; AM.hoyo=1; AM.editH=false; traerAmistoso(a); } }
+  if(r==="partida"){ if(a && (!AM.act || AM.act.partida_id!==a)){ AM.act=null; AM.hoyo=1; AM.ubicar=a; AM.editH=false; traerAmistoso(a); } }
   else AM.act=null;
   if(r!=="amistosos"){ AM.nueva=false; AM.canchaNueva=false; }
   pintar(); scrollTo(0,0); });
